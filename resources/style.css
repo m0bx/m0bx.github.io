@@ -1,17 +1,24 @@
 .image-wrap {
   position: relative;
   width: 100%;
-  max-height: 460px;
-  border-radius: 14px;
+  min-height: clamp(220px, 36vw, 420px);
+  max-height: min(70vh, 640px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
   overflow: hidden;
   border: 1px solid #e5e7eb;
   background: #f3f4f6;
+  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
 }
 
 .capy-img {
-  width: 100%;
-  max-height: 460px;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: min(70vh, 640px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
   display: block;
   opacity: 0;
   transform: scale(1.01);
@@ -77,4 +84,75 @@
 
 .image-wrap.is-loading .capy-img {
   opacity: 0;
+}
+
+.btn {
+  display: block;
+  margin: 0.25rem auto 0;
+  width: min(100%, 320px);
+  min-height: 48px;
+  padding: 0.85rem 1.2rem;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #111827, #2563eb);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    0 10px 22px rgba(37, 99, 235, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 28px rgba(37, 99, 235, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow:
+    0 8px 18px rgba(37, 99, 235, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.btn:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 3px;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.cursor {
+  display: inline-block;
+  margin-left: 0.08em;
+  animation: cursor-blink 0.9s steps(1, end) infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@media (max-width: 640px) {
+  .image-wrap {
+    min-height: 220px;
+    max-height: 58vh;
+  }
+
+  .capy-img {
+    max-height: 58vh;
+  }
+
+  .btn {
+    width: 100%;
+  }
 }
