@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MobX Capybara</title>
+  <title>mobx</title>
   <link rel="stylesheet" href="resources/style.css" />
 </head>
 <body>
@@ -47,13 +47,32 @@
 
   // --- Typewriter animation (mobx) ---
   const word = "mobx";
-  let index = 0;
+  const TYPE_SPEED = 120;
+  const ERASE_SPEED = 80;
+  const TYPEWRITER_CYCLE_MS = 5000;
 
-  function typeWord() {
-    if (index < word.length) {
-      typedText.textContent += word[index];
-      index++;
-      setTimeout(typeWord, 120);
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  async function runTypewriterLoop() {
+    while (true) {
+      typedText.textContent = "";
+
+      for (const char of word) {
+        typedText.textContent += char;
+        await sleep(TYPE_SPEED);
+      }
+
+      const usedMs = word.length * TYPE_SPEED + word.length * ERASE_SPEED;
+      const holdMs = Math.max(300, TYPEWRITER_CYCLE_MS - usedMs);
+
+      await sleep(holdMs);
+
+      while (typedText.textContent.length > 0) {
+        typedText.textContent = typedText.textContent.slice(0, -1);
+        await sleep(ERASE_SPEED);
+      }
+
+      await sleep(120);
     }
   }
 
@@ -104,9 +123,7 @@
     capyImg.src = imageUrl;
     capyImg.alt = data.alt || "Random capybara";
 
-    const sizeText =
-      data.width && data.height ? ` • ${data.width}×${data.height}` : "";
-    statusEl.textContent = `Capy #${data.index ?? "?"}${sizeText}`;
+    statusEl.textContent = `Capy #${data.index ?? "?"}`;
   }
 
   async function fetchCapyFact() {
@@ -157,7 +174,7 @@
   button.addEventListener("click", loadContent);
 
   window.addEventListener("DOMContentLoaded", () => {
-    typeWord();
+    runTypewriterLoop();
     loadContent();
   });
 </script>
