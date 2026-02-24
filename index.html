@@ -40,7 +40,7 @@
 <script>
   const typedText = document.getElementById("typed-text");
   const capyImg = document.getElementById("capy-img");
-  const statusEl = document.getElementById("status");
+  //const statusEl = document.getElementById("status");
   const factEl = document.getElementById("capy-fact");
   const button = document.getElementById("new-capy-btn");
   const imageWrap = document.getElementById("image-wrap");
@@ -123,7 +123,7 @@
     capyImg.src = imageUrl;
     capyImg.alt = data.alt || "Random capybara";
 
-    statusEl.textContent = `Capy #${data.index ?? "?"}`;
+    //statusEl.textContent = `Capy #${data.index ?? "?"}`;
   }
 
   async function fetchCapyFact() {
@@ -145,7 +145,7 @@
     let imageLoaded = false;
 
     setLoadingUI(true);
-    statusEl.textContent = "Fetching a capybara...";
+    //statusEl.textContent = "Fetching a capybara...";
     factEl.textContent = "Loading a capybara fact...";
 
     try {
@@ -156,7 +156,7 @@
 
       if (imageResult.status === "rejected") {
         console.error(imageResult.reason);
-        statusEl.textContent = "Could not load capybara image. Try again.";
+        //statusEl.textContent = "Could not load capybara image. Try again.";
         capyImg.alt = "Failed to load capybara image";
       } else {
         imageLoaded = true;
@@ -164,7 +164,7 @@
 
       if (factResult.status === "rejected") {
         console.error(factResult.reason);
-        factEl.textContent = "Could not load a capybara fact this time.";
+        //factEl.textContent = "Could not load a capybara fact this time.";
       }
     } finally {
       setLoadingUI(false, imageLoaded);
@@ -180,4 +180,5 @@
 </script>
 </body>
 </html>
+
 
