@@ -1,3 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MobX Capybara</title>
+  <link rel="stylesheet" href="resources/style.css" />
+</head>
+<body>
+  <main class="app">
+    <h1 class="typewriter" aria-label="mobx">
+      <span id="typed-text"></span><span class="cursor" aria-hidden="true">_</span>
+    </h1>
+
+    <section class="card">
+      <div id="image-wrap" class="image-wrap is-loading" aria-busy="true">
+        <div class="skeleton" aria-hidden="true"></div>
+        <div class="spinner" aria-hidden="true"></div>
+
+        <img
+          id="capy-img"
+          src=""
+          alt="Random capybara"
+          class="capy-img"
+        />
+      </div>
+
+      <p id="status" class="status">Loading capybara...</p>
+
+      <div id="fact-box" class="fact-box" aria-live="polite">
+        <p class="fact-label">Capy Fact</p>
+        <p id="capy-fact" class="fact-text">Loading a capybara fact...</p>
+      </div>
+
+      <button id="new-capy-btn" class="btn" type="button">
+        Get Another Capybara
+      </button>
+    </section>
+  </main>
 <script>
   const typedText = document.getElementById("typed-text");
   const capyImg = document.getElementById("capy-img");
@@ -122,3 +161,5 @@
     loadContent();
   });
 </script>
+</body>
+</html>
