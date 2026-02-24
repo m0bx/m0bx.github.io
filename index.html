@@ -1,51 +1,124 @@
-<!DOCTYPE html>
-<html lang="sk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Závozový formulár</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f8f0e3; /* Matches barista.html background color */
-        }
-        h1 {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-        h2 {
-            font-size: 1.5em;
-            margin-bottom: 30px;
-        }
-        .button {
-            display: inline-block;
-            padding: 20px 40px;
-            font-size: 1.5em;
-            margin: 10px;
-            color: white;
-            background-color: #d8ac5c; /* Matches barista button color */
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
-            transition: background-color 0.2s ease;
-        }
-        .button:hover {
-            background-color: #b99a4b; /* Darker color on hover to match barista button */
-        }
-    </style>
-</head>
-<body>
-    <h1>Závozový formulár</h1>
-    <h2>Vyber roli</h2>
-    <a href="flyboy.html" class="button">FlyBoy</a>
-    <a href="barista.html" class="button">Barista</a>
-</body>
-</html>
+<script>
+  const typedText = document.getElementById("typed-text");
+  const capyImg = document.getElementById("capy-img");
+  const statusEl = document.getElementById("status");
+  const factEl = document.getElementById("capy-fact");
+  const button = document.getElementById("new-capy-btn");
+  const imageWrap = document.getElementById("image-wrap");
+
+  // --- Typewriter animation (mobx) ---
+  const word = "mobx";
+  let index = 0;
+
+  function typeWord() {
+    if (index < word.length) {
+      typedText.textContent += word[index];
+      index++;
+      setTimeout(typeWord, 120);
+    }
+  }
+
+  function setLoadingUI(isLoading, imageReady = false) {
+    if (isLoading) {
+      imageWrap.classList.add("is-loading");
+      imageWrap.classList.remove("is-loaded");
+    } else {
+      imageWrap.classList.remove("is-loading");
+      if (imageReady) {
+        // Trigger fade-in after skeleton/spinner start fading out
+        requestAnimationFrame(() => {
+          imageWrap.classList.add("is-loaded");
+        });
+      } else {
+        imageWrap.classList.remove("is-loaded");
+      }
+    }
+
+    imageWrap.setAttribute("aria-busy", String(isLoading));
+    button.disabled = isLoading;
+  }
+
+  function preloadImage(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(url);
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  async function fetchRandomCapybara() {
+    const res = await fetch("https://api.capy.lol/v1/capybara?json=true", {
+      cache: "no-store",
+    });
+
+    if (!res.ok) throw new Error(`Image HTTP ${res.status}`);
+
+    const json = await res.json();
+    const data = json?.data;
+
+    if (!data?.url) throw new Error("Missing image URL");
+
+    const imageUrl = data.url.replace(/^http:\/\//i, "https://");
+    await preloadImage(imageUrl);
+
+    capyImg.src = imageUrl;
+    capyImg.alt = data.alt || "Random capybara";
+
+    const sizeText =
+      data.width && data.height ? ` • ${data.width}×${data.height}` : "";
+    statusEl.textContent = `Capy #${data.index ?? "?"}${sizeText}`;
+  }
+
+  async function fetchCapyFact() {
+    const res = await fetch("https://api.capy.lol/v1/fact", {
+      cache: "no-store",
+    });
+
+    if (!res.ok) throw new Error(`Fact HTTP ${res.status}`);
+
+    const json = await res.json();
+    const fact = json?.data?.fact;
+
+    if (!fact) throw new Error("Missing fact text");
+
+    factEl.textContent = fact;
+  }
+
+  async function loadContent() {
+    let imageLoaded = false;
+
+    setLoadingUI(true);
+    statusEl.textContent = "Fetching a capybara...";
+    factEl.textContent = "Loading a capybara fact...";
+
+    try {
+      const [imageResult, factResult] = await Promise.allSettled([
+        fetchRandomCapybara(),
+        fetchCapyFact(),
+      ]);
+
+      if (imageResult.status === "rejected") {
+        console.error(imageResult.reason);
+        statusEl.textContent = "Could not load capybara image. Try again.";
+        capyImg.alt = "Failed to load capybara image";
+      } else {
+        imageLoaded = true;
+      }
+
+      if (factResult.status === "rejected") {
+        console.error(factResult.reason);
+        factEl.textContent = "Could not load a capybara fact this time.";
+      }
+    } finally {
+      setLoadingUI(false, imageLoaded);
+    }
+  }
+
+  button.addEventListener("click", loadContent);
+
+  window.addEventListener("DOMContentLoaded", () => {
+    typeWord();
+    loadContent();
+  });
+</script>
