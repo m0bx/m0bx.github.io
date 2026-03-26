@@ -4,8 +4,8 @@
 const DOWNLOADS_DATA = [
   {
     name: "School LaTeX Template",
-    description: "A clean, pre-configured template for assignments and lab reports.",
-    url: "downloads/latex-template.zip"
+    description: "A clean, pre-configured template for projects and lab assignments.",
+    url: "https://github.com/m0bx/m0bx.github.io/raw/refs/heads/main/FEKT_Project_Template.zip"
   },
   {
     name: "Project Boilerplate",
