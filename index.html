@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mobx | Universe</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="icon.ico" />
+</head>
+<body>
+  <div class="stars"></div>
+
+  <nav class="navbar">
+    <div class="nav-header">
+      <div class="brand-and-mark" id="brand-logo" role="button" tabindex="0">
+        <div class="brandmark-circle">
+          <div class="brandmark-inner"></div>
+        </div>
+        <div class="nav-brand">mobx</div>
+      </div>
+      
+      <button class="hamburger" aria-label="Toggle menu" id="hamburger-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    
+    <ul class="nav-links" id="nav-links">
+      <li><button class="nav-btn active" data-target="home">Home</button></li>
+      <li><button class="nav-btn" data-target="capy">Capybaras</button></li>
+      <li><button class="nav-btn" data-target="downloads">Downloads</button></li>
+    </ul>
+  </nav>
+
+  <main class="app-container">
+    
+    <section id="home" class="page-section active">
+      <div class="hero">
+        <h1 class="typewriter" aria-label="mobx">
+          <span id="typed-text"></span><span class="cursor" aria-hidden="true">_</span>
+        </h1>
+        <p class="subtitle">Welcome to my corner of the cosmos.</p>
+      </div>
+    </section>
+
+    <section id="capy" class="page-section">
+      <div class="glass-card capy-card">
+        <h2>Capybara Generator</h2>
+        
+        <div id="image-wrap" class="image-wrap is-loading" aria-busy="true">
+          <div class="skeleton" aria-hidden="true"></div>
+          <img class="loader-gif" src="skeleton.gif" alt="" aria-hidden="true" />
+          <img id="capy-img" src="" alt="Random capybara" class="capy-img" />
+        </div>
+
+        <div id="fact-box" class="fact-box" aria-live="polite">
+          <p class="fact-label">Did you know?</p>
+          <p id="capy-fact" class="fact-text">Loading a capybara fact...</p>
+        </div>
+
+        <button id="new-capy-btn" class="glow-btn" type="button">
+          Summon Another Capy
+        </button>
+      </div>
+    </section>
+
+    <section id="downloads" class="page-section">
+      <div class="section-header">
+        <h2>My Creations</h2>
+        <p>Resources, templates, and scripts.</p>
+      </div>
+      
+      <div class="grid-container" id="downloads-grid">
+        <p style="text-align: center; color: var(--text-muted); width: 100%;">Loading downloads...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="main.js"></script>
+</body>
+</html>
