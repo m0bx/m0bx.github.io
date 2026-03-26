@@ -6,16 +6,6 @@ const DOWNLOADS_DATA = [
     name: "School LaTeX Template",
     description: "A clean, pre-configured template for projects and lab assignments.",
     url: "blob:https://github.com/1f937030-5aa1-40ea-93a1-11e124b0c158"
-  },
-  {
-    name: "Project Boilerplate",
-    description: "My go-to starting point for fast web projects.",
-    url: "downloads/boilerplate.zip"
-  },
-  {
-    name: "Terminal Config",
-    description: "Custom configuration files for a beautiful terminal experience.",
-    url: "downloads/term-config.zip"
   }
 ];
 // ==========================================
