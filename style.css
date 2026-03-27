@@ -1,6 +1,6 @@
 /* --- Base Variables & Reset --- */
 :root {
-  --bg-dark: #090a0f;
+  --bg-dark: #090a0f; /* The base "void" color */
   --text-main: #f3f4f6;
   --text-muted: #9ca3af;
   --accent-blue: #3b82f6;
@@ -16,33 +16,49 @@
   padding: 0;
 }
 
+/* --- The Fix is Here --- */
+/* The HTML gets the base dark void color as a fallback */
+html {
+  background-color: var(--bg-dark);
+}
+
 body {
-  background: radial-gradient(ellipse at bottom, #1b2735 0%, var(--bg-dark) 100%);
+  /* Body background is transparent so the fixed background can show through */
+  background: transparent; 
   color: var(--text-main);
   font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-/* --- Space Background --- */
+/* --- Unified Space Background --- */
 .stars {
-  position: fixed;
+  position: fixed; /* Anchored to screen, does not scroll with content */
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  pointer-events: none;
-  z-index: -1;
+  pointer-events: none; /* Allows user to click through to content */
+  z-index: -1; /* Placed behind content */
+
+  /* LAYERED BACKGROUND: We combine the main gradient and the star pattern here.
+     Layer 1 (Bottom): The main space gradient (shifted slightly darker for void contrast).
+     Layer 2 (Top): The star patterns.
+  */
   background-image: 
+    /* Star pattern layer */
     radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
     radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
     radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
     radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
     radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 160px 120px, #ddd, rgba(0,0,0,0));
-  background-repeat: repeat;
-  background-size: 200px 200px;
-  opacity: 0.3;
+    radial-gradient(2px 2px at 160px 120px, #ddd, rgba(0,0,0,0)),
+    /* Base Space Gradient Layer - Now anchored to the fixed screen */
+    radial-gradient(ellipse at bottom, #1b2735 0%, #0c1118 60%, var(--bg-dark) 100%);
+  
+  background-repeat: repeat, no-repeat; /* Repeat stars, don't repeat the main gradient */
+  background-size: 200px 200px, cover; /* Size the stars, cover the screen with the gradient */
+  opacity: 0.6; /* Slight transparency for softness */
 }
 
 /* --- Navigation --- */
@@ -70,7 +86,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  cursor: pointer; /* Makes it clear it's clickable */
+  cursor: pointer;
   transition: transform 0.2s ease;
 }
 
@@ -118,7 +134,7 @@ body {
 .nav-links {
   list-style: none;
   display: flex;
-  gap: 2.5rem; /* Spread out a bit more for large monitors */
+  gap: 2.5rem;
 }
 
 /* Updated Nav Button - Larger text for high res */
@@ -127,7 +143,7 @@ body {
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 1.25rem; /* Larger text */
+  font-size: 1.25rem;
   font-weight: 500;
   letter-spacing: 0.5px;
   cursor: pointer;
@@ -353,18 +369,17 @@ body {
   .nav-links {
     display: flex;
     position: absolute;
-    top: 100%; /* Pushes it exactly below the navbar */
+    top: 100%; 
     left: 0;
     width: 100%;
     flex-direction: column;
     gap: 1.5rem;
     padding: 2rem 0;
-    background: rgba(9, 10, 15, 0.95); /* Deep transparent background */
-    backdrop-filter: blur(15px); /* Glassmorphism blur */
+    background: rgba(9, 10, 15, 0.95); 
+    backdrop-filter: blur(15px); 
     border-bottom: 1px solid var(--glass-border);
     text-align: center;
     
-    /* Hidden by default with opacity/pointer-events instead of display: none for smoother transitions */
     opacity: 0;
     pointer-events: none;
     transform: translateY(-10px);
