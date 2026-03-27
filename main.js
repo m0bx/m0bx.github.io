@@ -1,22 +1,10 @@
-// ==========================================
-// --- CUSTOMIZE YOUR DOWNLOADS HERE ---
-// ==========================================
-const DOWNLOADS_DATA = [
-  {
-    name: "School LaTeX Template",
-    description: "A clean, pre-configured template for projects and lab assignments.",
-    url: "blob:https://github.com/1f937030-5aa1-40ea-93a1-11e124b0c158"
-  }
-];
-// ==========================================
-
 document.addEventListener("DOMContentLoaded", () => {
   // --- Navigation & Mobile Menu Logic ---
   const navBtns = document.querySelectorAll('.nav-btn');
   const pages = document.querySelectorAll('.page-section');
   const hamburgerBtn = document.getElementById('hamburger-btn');
   const navLinksMenu = document.getElementById('nav-links');
-  const brandLogo = document.getElementById('brand-logo'); // Added brand logo
+  const brandLogo = document.getElementById('brand-logo'); 
 
   // Toggle mobile menu
   hamburgerBtn.addEventListener('click', () => {
@@ -45,28 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
       navLinksMenu.classList.remove('show');
     });
   });
-
-  // --- Downloads Loading Logic ---
-  function loadDownloads() {
-    const grid = document.getElementById("downloads-grid");
-    grid.innerHTML = ""; // Clear the "Loading downloads..." text
-    
-    if (DOWNLOADS_DATA.length === 0) {
-      grid.innerHTML = `<p style="text-align: center; color: var(--text-muted); width: 100%;">No downloads available yet. Check back later!</p>`;
-      return;
-    }
-
-    DOWNLOADS_DATA.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'glass-card download-card';
-      card.innerHTML = `
-        <h3>${item.name}</h3>
-        <p>${item.description}</p>
-        <a href="${item.url}" class="glow-btn small-btn" download>Download</a>
-      `;
-      grid.appendChild(card);
-    });
-  }
 
   // --- Typewriter Logic ---
   const typedText = document.getElementById("typed-text");
@@ -171,9 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Initialize all functions
+  // Initialize active functions
   button.addEventListener("click", loadContent);
   runTypewriterLoop();
   loadContent(); 
-  loadDownloads(); 
 });
