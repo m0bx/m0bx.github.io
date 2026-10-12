@@ -1,0 +1,51 @@
+/* Brand mark and header look, taken 1:1 from https://m0bx.github.io (style.css).
+   The absorber page keeps its own light/dark content theme, the header stays dark. */
+
+.topbar {
+  --accent-blue: #3b82f6;
+  --accent-light: #7dd3fc;
+  --accent-glow: rgba(59, 130, 246, 0.5);
+}
+
+.brand-and-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: fit-content;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.brand-and-mark:hover {
+  transform: scale(1.02);
+}
+
+/* Pure CSS Brand Mark */
+.brandmark-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(30, 41, 59, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.brandmark-inner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-light), var(--accent-blue));
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.nav-brand {
+  font-size: 1.6rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #fff;
+  text-shadow: 0 0 10px var(--accent-glow);
+}

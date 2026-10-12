@@ -4,10 +4,11 @@ import {
   farFieldDistance,
   generateDesigns,
   patternLevelDb,
+  planBlocks,
   recommendedDesigns,
   sortDesigns,
   validateSettings,
-} from "./core.js?v=20261012-1";
+} from "./core.js?v=20261012-3";
 
 const STORAGE_KEY = "absorber-hood-optimizer-v1";
 const THEME_STORAGE_KEY = "chamber-optimizer-theme";
@@ -49,6 +50,19 @@ const elements = {
   sortSelect: document.querySelector("#sortSelect"),
   resetButton: document.querySelector("#resetButton"),
   themeToggle: document.querySelector("#themeToggle"),
+  orderInputs: [...document.querySelectorAll("[data-order]")],
+  orderSummary: document.querySelector("#orderSummary"),
+  orderTotal: document.querySelector("#orderTotal"),
+  orderTotalNote: document.querySelector("#orderTotalNote"),
+  orderWhole: document.querySelector("#orderWhole"),
+  orderCut: document.querySelector("#orderCut"),
+  orderCutNote: document.querySelector("#orderCutNote"),
+  orderScrap: document.querySelector("#orderScrap"),
+  orderScrapNote: document.querySelector("#orderScrapNote"),
+  orderPanelBody: document.querySelector("#orderPanelBody"),
+  orderPieceBody: document.querySelector("#orderPieceBody"),
+  orderPatterns: document.querySelector("#orderPatterns"),
+  orderNote: document.querySelector("#orderNote"),
 };
 
 let state = loadState();
@@ -126,6 +140,10 @@ function applyStateToControls() {
     const key = input.dataset.setting;
     if (key in state) input.value = state[key];
   }
+  for (const input of elements.orderInputs) {
+    const key = input.dataset.order;
+    if (key in state) input.value = state[key];
+  }
   updateControlVisibility();
 }
 
@@ -176,6 +194,7 @@ function clearSelectedOutput(message = "No feasible design") {
   renderEmptySvg(elements.rangeSvg, message);
   renderEmptySvg(elements.panelSvg, message);
   renderEmptySvg(elements.patternSvg, message);
+  clearOrder();
 }
 
 function renderEmptySvg(svg, message) {
@@ -233,6 +252,109 @@ function selectedDesign() {
   return calculation?.designs.find((item) => item.id === selectedDesignId) ?? null;
 }
 
+const planCache = new Map();
+
+function blockPlan(design) {
+  const sparePercent = Math.max(0, Number(state.sparePercent) || 0);
+  const key = [design.centralCells, design.wingCells, state.pyramidsPerSide, state.blockSide, sparePercent].join("|");
+  let plan = planCache.get(key);
+  if (!plan) {
+    if (planCache.size > 2000) planCache.clear();
+    plan = planBlocks({
+      centralCells: design.centralCells,
+      wingCells: design.wingCells,
+      pyramidsPerSide: state.pyramidsPerSide,
+      blockSide: state.blockSide,
+      hoods: 2,
+      sparePercent,
+    });
+    planCache.set(key, plan);
+  }
+  return plan;
+}
+
+function formatCm(value) {
+  return `${formatNumber(value, value < 10 ? 1 : 0)} cm`;
+}
+
+function clearOrder(message = "—") {
+  elements.orderSummary.textContent = message;
+  for (const node of [elements.orderTotal, elements.orderWhole, elements.orderCut, elements.orderScrap]) {
+    node.textContent = "—";
+  }
+  elements.orderPanelBody.innerHTML = "";
+  elements.orderPieceBody.innerHTML = "";
+  elements.orderPatterns.innerHTML = "";
+  elements.orderNote.textContent = "";
+}
+
+function renderOrder(design) {
+  if (!design) {
+    clearOrder();
+    return;
+  }
+  const plan = blockPlan(design);
+  const n = plan.pyramidsPerSide;
+  const blockCm = state.blockSide * 100;
+  const pricePerBlock = Math.max(0, Number(state.blockPrice) || 0);
+
+  elements.orderSummary.textContent =
+    `${n}×${n} pyramids per ${formatNumber(blockCm, 0)}×${formatNumber(blockCm, 0)} cm block · pitch ${formatNumber(plan.pitch * 1000, Number.isInteger(Math.round(plan.pitch * 10000) / 10) ? 0 : 1)} mm`;
+
+  elements.orderTotal.textContent = plan.totalBlocks.toLocaleString("en");
+  elements.orderTotalNote.textContent = plan.spareBlocks
+    ? `${plan.baseBlocks} needed + ${plan.spareBlocks} spare`
+    : "Whole + cut blocks";
+  if (pricePerBlock > 0) {
+    elements.orderTotalNote.textContent += ` · total ${formatNumber(plan.totalBlocks * pricePerBlock, 0)}`;
+  }
+
+  elements.orderWhole.textContent = plan.wholeBlocks.toLocaleString("en");
+  elements.orderCut.textContent = plan.cutBlocks.toLocaleString("en");
+  elements.orderCutNote.textContent = plan.cutBlocks
+    ? "Cut into strips and corner pieces"
+    : "Nothing needs to be cut";
+  elements.orderScrap.textContent = plan.scrapPyramids.toLocaleString("en");
+  elements.orderScrapNote.textContent = plan.cutBlocks
+    ? `pyramids · ${formatPercent(plan.scrapShare, 0)} of the cut blocks`
+    : "No offcuts";
+
+  elements.orderPanelBody.innerHTML = plan.panelTypes.map((panel) => {
+    const cuts = panel.piecesPerPanel.length
+      ? panel.piecesPerPanel.map((piece) => `${piece.qty} × ${piece.label}`).join(", ")
+      : "—";
+    return `
+      <tr>
+        <td class="text-left">${escapeHtml(panel.name)}</td>
+        <td>${panel.count}</td>
+        <td>${formatMetres(panel.widthM, 2)} × ${formatMetres(panel.heightM, 2)}</td>
+        <td>${panel.cols} × ${panel.rows}</td>
+        <td>${panel.wholePerPanel}</td>
+        <td class="text-left">${escapeHtml(cuts)}</td>
+      </tr>`;
+  }).join("");
+
+  elements.orderPieceBody.innerHTML = plan.pieceGroups.length
+    ? plan.pieceGroups.map((group) => `
+      <tr>
+        <td class="text-left">${escapeHtml(group.label)}</td>
+        <td>${formatCm(group.widthCm)} × ${formatCm(group.lengthCm)}</td>
+        <td>${group.qty}</td>
+      </tr>`).join("")
+    : '<tr><td class="text-left" colspan="3">No cut pieces: every panel is made of whole blocks.</td></tr>';
+
+  elements.orderPatterns.innerHTML = plan.cutPatterns.length
+    ? plan.cutPatterns.map((pattern) => `
+      <li>
+        <span>${pattern.blocks} × block → ${escapeHtml(pattern.parts.join(" + "))}</span>
+        <span>${pattern.scrapPyramids ? `${pattern.scrapPyramids} pyramids scrap` : "no scrap"}</span>
+      </li>`).join("")
+    : '<li><span>No block has to be cut.</span><span></span></li>';
+
+  elements.orderNote.textContent =
+    "Pieces are written as width × length in pyramids and may be rotated. The cutting plan is a practical heuristic, so check it before ordering.";
+}
+
 function renderSelectedDesign() {
   const design = selectedDesign();
   if (!design) {
@@ -249,12 +371,13 @@ function renderSelectedDesign() {
   elements.metricPower.textContent = formatPercent(design.coneCoverage, 1);
   elements.metricMissedPower.textContent = `${formatPercent(design.missedConePower, 1)} of nominal cone power escapes`;
   elements.selectedDesignTitle.textContent = `C ${formatNumber(design.centralSide, 2)} m · W ${formatNumber(design.wingLength, 2)} m`;
-  elements.selectedDimensions.textContent = `α ${formatDegrees(design.wingAngle, 1)} · ${formatNumber(design.absorberArea, 2)} m² · ${design.minimumWholeBlocks} block minimum`;
+  elements.selectedDimensions.textContent = `α ${formatDegrees(design.wingAngle, 1)} · ${formatNumber(design.absorberArea, 2)} m² per hood · ${blockPlan(design).totalBlocks} blocks to buy`;
   elements.patternCaption.innerHTML = `cos<sup>q</sup>(θ), ${formatDb(state.patternEdgeLevelDb, 1)} at ±${formatNumber(state.patternEdgeAngle, 1)}°`;
 
   renderRangeDiagram(design);
   renderPanelDiagram(design);
   renderPatternDiagram(design);
+  renderOrder(design);
   renderWarnings(design);
   markSelectedCardsAndRows();
 }
@@ -324,7 +447,7 @@ function renderTable() {
       <td>${formatPercent(design.coneCoverage, 1)}</td>
       <td>${formatMetres(design.minimumTipGap, 2)}</td>
       <td>${formatNumber(design.absorberArea, 2)} m²</td>
-      <td>${design.minimumWholeBlocks}</td>
+      <td>${blockPlan(design).totalBlocks}</td>
     </tr>
   `).join("");
 
@@ -569,6 +692,16 @@ function scheduleCalculation() {
 for (const input of elements.inputs) {
   input.addEventListener("input", scheduleCalculation);
   input.addEventListener("change", () => runCalculation({ preserveSelection: false }));
+}
+
+for (const input of elements.orderInputs) {
+  input.addEventListener("input", () => {
+    const parsed = Number(input.value);
+    state[input.dataset.order] = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+    saveState();
+    renderTable();
+    renderSelectedDesign();
+  });
 }
 
 for (const button of elements.modeButtons) {

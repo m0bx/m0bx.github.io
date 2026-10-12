@@ -167,6 +167,12 @@ body {
   color: #fff;
 }
 
+/* Link-style tab (opens a separate page, e.g. /absorber) */
+a.nav-btn {
+  display: inline-block;
+  text-decoration: none;
+}
+
 .nav-btn:hover::after, .nav-btn.active::after {
   width: 100%;
 }

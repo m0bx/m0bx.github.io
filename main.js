@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   // --- Navigation & Mobile Menu Logic ---
-  const navBtns = document.querySelectorAll('.nav-btn');
+  const navBtns = document.querySelectorAll('.nav-btn[data-target]');
   const pages = document.querySelectorAll('.page-section');
   const hamburgerBtn = document.getElementById('hamburger-btn');
   const navLinksMenu = document.getElementById('nav-links');

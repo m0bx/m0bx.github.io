@@ -6,6 +6,7 @@
   <meta name="description" content="Discrete chamber geometry optimizer for a free-space antenna test range.">
   <meta name="color-scheme" content="light dark">
   <title>Chamber optimizer</title>
+  <link rel="icon" href="../icon.ico">
   <script>
     try {
       if (localStorage.getItem("chamber-optimizer-theme") === "dark") {
@@ -13,16 +14,17 @@
       }
     } catch {}
   </script>
-  <link rel="stylesheet" href="./styles.css?v=20261012-2">
+  <link rel="stylesheet" href="./brand.css?v=20261012-3">
+  <link rel="stylesheet" href="./styles.css?v=20261012-3">
 </head>
 <body>
   <div class="page-shell">
     <header class="topbar">
-      <a class="brand" href="../" aria-label="Return to m0bx home">
-        <span class="brandmark-circle" aria-hidden="true">
-          <span class="brandmark-inner"></span>
-        </span>
-        <span class="nav-brand">mobx</span>
+      <a class="brand-and-mark" href="../" aria-label="Return to m0bx home">
+        <div class="brandmark-circle" aria-hidden="true">
+          <div class="brandmark-inner"></div>
+        </div>
+        <div class="nav-brand">mobx</div>
       </a>
       <div class="title-block">
         <h1>Chamber optimizer</h1>
@@ -337,6 +339,99 @@
           </div>
         </section>
 
+        <section class="order-card" id="orderCard" aria-label="Absorber order calculator">
+          <div class="card-heading">
+            <div>
+              <h2>Absorber order</h2>
+              <p>Both mirrored hoods. Whole blocks stay uncut; the rest is cut into full strips, never single pyramids.</p>
+            </div>
+            <div class="selected-dimensions" id="orderSummary">—</div>
+          </div>
+
+          <div class="order-controls">
+            <label class="field">
+              <span class="field-label">Spare material</span>
+              <span class="input-with-unit">
+                <input data-order="sparePercent" type="number" min="0" max="100" step="1" value="0">
+                <span>%</span>
+              </span>
+            </label>
+            <label class="field">
+              <span class="field-label">Price per block (optional)</span>
+              <span class="input-with-unit">
+                <input data-order="blockPrice" type="number" min="0" step="1" value="0">
+                <span>/ block</span>
+              </span>
+            </label>
+          </div>
+
+          <div class="order-metrics" aria-live="polite">
+            <article class="metric-card primary-metric">
+              <span class="metric-label">Blocks to buy</span>
+              <strong id="orderTotal">—</strong>
+              <small id="orderTotalNote">Whole + cut blocks</small>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Whole blocks, no cutting</span>
+              <strong id="orderWhole">—</strong>
+              <small>Used as they are</small>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Blocks to cut</span>
+              <strong id="orderCut">—</strong>
+              <small id="orderCutNote">Cut into strips and corner pieces</small>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Offcut scrap</span>
+              <strong id="orderScrap">—</strong>
+              <small id="orderScrapNote">Left over from cut blocks</small>
+            </article>
+          </div>
+
+          <div class="order-tables">
+            <div>
+              <h3>Panels</h3>
+              <div class="table-wrap">
+                <table class="compact-table">
+                  <thead>
+                    <tr>
+                      <th scope="col" class="text-left">Panel</th>
+                      <th scope="col">Qty</th>
+                      <th scope="col">Size</th>
+                      <th scope="col">Pyramids</th>
+                      <th scope="col">Whole / panel</th>
+                      <th scope="col" class="text-left">Cuts / panel</th>
+                    </tr>
+                  </thead>
+                  <tbody id="orderPanelBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <h3>Pieces cut from blocks</h3>
+              <div class="table-wrap">
+                <table class="compact-table">
+                  <thead>
+                    <tr>
+                      <th scope="col" class="text-left">Piece (pyramids)</th>
+                      <th scope="col">Size</th>
+                      <th scope="col">Pieces</th>
+                    </tr>
+                  </thead>
+                  <tbody id="orderPieceBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="order-patterns">
+            <h3>Cutting plan</h3>
+            <ul id="orderPatterns"></ul>
+          </div>
+          <p class="order-note" id="orderNote"></p>
+        </section>
+
         <section id="warningPanel" class="warning-panel" aria-live="polite">
           <div class="warning-icon" aria-hidden="true">i</div>
           <div>
@@ -384,7 +479,7 @@
                   <th scope="col">Cone power</th>
                   <th scope="col">Tip gap</th>
                   <th scope="col">Absorber area</th>
-                  <th scope="col">Blocks min.</th>
+                  <th scope="col" title="Whole blocks plus blocks that have to be cut, both hoods">Blocks to buy</th>
                 </tr>
               </thead>
               <tbody id="designTableBody"></tbody>
@@ -412,7 +507,7 @@
             <div>
               <h3>Construction limits</h3>
               <p>Four rectangular wings leave diagonal corner openings. The optimizer covers the vertical and horizontal principal planes only. Add corner infill or overlapping absorber pieces if full azimuthal interception is required. Stands, antenna bodies, hinges and cable clearances are not modelled.</p>
-              <p>Minimum block count is an area lower bound and assumes offcuts can be reused. Confirm the final cutting layout before ordering material.</p>
+              <p>Order planning counts both mirrored hoods. Each panel is divided into whole blocks plus full strips (<em>r</em> × <em>N</em>, <em>N</em> × <em>r</em>) and one corner piece, where <em>N</em> is the number of pyramids per block side. These pieces are packed into blocks with guillotine cuts, rotation allowed. The packing is a practical heuristic, not a proven minimum, so confirm the final cutting layout before ordering material.</p>
             </div>
           </div>
         </details>
@@ -426,6 +521,6 @@
   </div>
 
   <noscript>This calculator requires JavaScript to run.</noscript>
-  <script type="module" src="./app.js?v=20261012-2"></script>
+  <script type="module" src="./app.js?v=20261012-3"></script>
 </body>
 </html>

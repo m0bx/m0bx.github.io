@@ -25,6 +25,8 @@ export const DEFAULTS = Object.freeze({
   patternEdgeLevelDb: -12,
   apertureDiameter: 0.20,
   maxFrequencyGhz: 2.29,
+  sparePercent: 0,
+  blockPrice: 0,
 });
 
 export function clamp(value, minimum, maximum) {
@@ -256,6 +258,8 @@ export function panelMetrics(settings, centralSide, wingLength, wingAngleDeg) {
     equivalentBlocks,
     minimumWholeBlocks: Math.ceil(equivalentBlocks - EPS),
     pyramidCount,
+    centralCells,
+    wingCells,
     edgeLevelDb,
     coneCoverage,
     missedConePower: 1 - coneCoverage,
@@ -497,3 +501,179 @@ export function validateSettings(inputSettings = {}) {
   return { settings, messages };
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Absorber order planning                                             */
+/* ------------------------------------------------------------------ */
+
+function pieceLabel(a, b) {
+  return `${Math.min(a, b)}×${Math.max(a, b)}`;
+}
+
+/**
+ * Splits one rectangular panel (cols × rows pyramids) into whole blocks and
+ * cut pieces. Pieces are always full strips of a block (rx × N, N × ry) plus
+ * at most one corner piece (rx × ry), so a panel is never assembled from
+ * single pyramids.
+ */
+function splitPanel(cols, rows, n) {
+  const fullX = Math.floor(cols / n);
+  const fullY = Math.floor(rows / n);
+  const rx = cols - fullX * n;
+  const ry = rows - fullY * n;
+  const pieces = [];
+  if (rx > 0 && fullY > 0) pieces.push({ w: rx, h: n, qty: fullY });
+  if (ry > 0 && fullX > 0) pieces.push({ w: n, h: ry, qty: fullX });
+  if (rx > 0 && ry > 0) pieces.push({ w: rx, h: ry, qty: 1 });
+  return { whole: fullX * fullY, pieces };
+}
+
+/**
+ * Guillotine packing of rectangular pieces (rotation allowed, the pyramid
+ * grid is square) into n × n blocks. Returns one entry per block that has to
+ * be cut.
+ */
+function packPieces(pieces, n) {
+  const bins = [];
+  const sorted = [...pieces].sort(
+    (a, b) => b.w * b.h - a.w * a.h || Math.max(b.w, b.h) - Math.max(a.w, a.h),
+  );
+
+  for (const piece of sorted) {
+    let best = null;
+    for (const bin of bins) {
+      bin.free.forEach((rect, index) => {
+        for (const rotated of [false, true]) {
+          const pw = rotated ? piece.h : piece.w;
+          const ph = rotated ? piece.w : piece.h;
+          if (pw > rect.w || ph > rect.h) continue;
+          const score = Math.min(rect.w - pw, rect.h - ph) * 1000 + (rect.w * rect.h - pw * ph);
+          if (!best || score < best.score) best = { bin, index, rect, pw, ph, score };
+        }
+      });
+    }
+
+    if (!best) {
+      const bin = { free: [{ x: 0, y: 0, w: n, h: n }], placed: [] };
+      bins.push(bin);
+      best = { bin, index: 0, rect: bin.free[0], pw: piece.w, ph: piece.h };
+    }
+
+    const { bin, index, rect, pw, ph } = best;
+    bin.placed.push({ w: pw, h: ph });
+    bin.free.splice(index, 1);
+    const leftW = rect.w - pw;
+    const leftH = rect.h - ph;
+    const splitVertically = leftW < leftH;
+    const right = splitVertically
+      ? { x: rect.x + pw, y: rect.y, w: leftW, h: ph }
+      : { x: rect.x + pw, y: rect.y, w: leftW, h: rect.h };
+    const below = splitVertically
+      ? { x: rect.x, y: rect.y + ph, w: rect.w, h: leftH }
+      : { x: rect.x, y: rect.y + ph, w: pw, h: leftH };
+    if (right.w > 0 && right.h > 0) bin.free.push(right);
+    if (below.w > 0 && below.h > 0) bin.free.push(below);
+  }
+  return bins;
+}
+
+/**
+ * Block order for the whole chamber.
+ * centralCells / wingCells are panel dimensions in pyramids.
+ */
+export function planBlocks({
+  centralCells,
+  wingCells,
+  pyramidsPerSide,
+  blockSide = 0.5,
+  hoods = 2,
+  sparePercent = 0,
+}) {
+  const n = Math.max(1, Math.round(pyramidsPerSide));
+  const pitch = blockSide / n;
+  const c = Math.max(0, Math.round(centralCells));
+  const w = Math.max(0, Math.round(wingCells));
+
+  const panelTypes = [];
+  if (c > 0) panelTypes.push({ name: "Central panel", cols: c, rows: c, count: hoods });
+  if (c > 0 && w > 0) panelTypes.push({ name: "Wing", cols: c, rows: w, count: 4 * hoods });
+
+  let wholeBlocks = 0;
+  let totalPyramids = 0;
+  const pieceMap = new Map();
+  const allPieces = [];
+
+  for (const panel of panelTypes) {
+    const split = splitPanel(panel.cols, panel.rows, n);
+    panel.widthM = panel.cols * pitch;
+    panel.heightM = panel.rows * pitch;
+    panel.wholePerPanel = split.whole;
+    const perPanel = new Map();
+    for (const piece of split.pieces) {
+      const label = pieceLabel(piece.w, piece.h);
+      perPanel.set(label, (perPanel.get(label) ?? 0) + piece.qty);
+    }
+    panel.piecesPerPanel = [...perPanel].map(([label, qty]) => ({ label, qty }));
+    wholeBlocks += split.whole * panel.count;
+    totalPyramids += panel.cols * panel.rows * panel.count;
+
+    for (const piece of split.pieces) {
+      const key = pieceLabel(piece.w, piece.h);
+      const qty = piece.qty * panel.count;
+      const entry = pieceMap.get(key) ?? {
+        label: key,
+        a: Math.min(piece.w, piece.h),
+        b: Math.max(piece.w, piece.h),
+        qty: 0,
+      };
+      entry.qty += qty;
+      pieceMap.set(key, entry);
+      for (let i = 0; i < qty; i += 1) allPieces.push({ w: piece.w, h: piece.h });
+    }
+  }
+
+  const pieceGroups = [...pieceMap.values()]
+    .map((entry) => ({
+      ...entry,
+      widthCm: entry.a * pitch * 100,
+      lengthCm: entry.b * pitch * 100,
+    }))
+    .sort((x, y) => y.a * y.b - x.a * x.b);
+
+  const bins = packPieces(allPieces, n);
+  const cutBlocks = bins.length;
+  const piecePyramids = allPieces.reduce((sum, piece) => sum + piece.w * piece.h, 0);
+  const scrapPyramids = cutBlocks * n * n - piecePyramids;
+
+  const patternMap = new Map();
+  for (const bin of bins) {
+    const parts = bin.placed.map((piece) => pieceLabel(piece.w, piece.h)).sort();
+    const key = parts.join(" + ");
+    const used = bin.placed.reduce((sum, piece) => sum + piece.w * piece.h, 0);
+    const entry = patternMap.get(key) ?? { parts, blocks: 0, scrapPyramids: n * n - used };
+    entry.blocks += 1;
+    patternMap.set(key, entry);
+  }
+  const cutPatterns = [...patternMap.values()].sort((x, y) => y.blocks - x.blocks);
+
+  const baseBlocks = wholeBlocks + cutBlocks;
+  const spareBlocks = Math.ceil(baseBlocks * Math.max(0, sparePercent) / 100 - 1e-9);
+
+  return {
+    pyramidsPerSide: n,
+    pitch,
+    hoods,
+    panelTypes,
+    totalPyramids,
+    wholeBlocks,
+    cutBlocks,
+    baseBlocks,
+    spareBlocks,
+    totalBlocks: baseBlocks + spareBlocks,
+    pieceGroups,
+    cutPatterns,
+    scrapPyramids,
+    scrapShare: cutBlocks ? scrapPyramids / (cutBlocks * n * n) : 0,
+    purchasedPyramids: baseBlocks * n * n,
+  };
+}
