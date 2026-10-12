@@ -7,7 +7,7 @@ import {
   recommendedDesigns,
   sortDesigns,
   validateSettings,
-} from "./core.js";
+} from "./core.js?v=20261012-1";
 
 const STORAGE_KEY = "absorber-hood-optimizer-v1";
 const SVG_NS = "http://www.w3.org/2000/svg";
