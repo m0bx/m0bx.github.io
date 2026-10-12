@@ -10,7 +10,7 @@ import {
 } from "./core.js?v=20261012-1";
 
 const STORAGE_KEY = "absorber-hood-optimizer-v1";
-const SVG_NS = "http://www.w3.org/2000/svg";
+const THEME_STORAGE_KEY = "chamber-optimizer-theme";
 
 const elements = {
   inputs: [...document.querySelectorAll("[data-setting]")],
@@ -48,6 +48,7 @@ const elements = {
   showMoreButton: document.querySelector("#showMoreButton"),
   sortSelect: document.querySelector("#sortSelect"),
   resetButton: document.querySelector("#resetButton"),
+  themeToggle: document.querySelector("#themeToggle"),
 };
 
 let state = loadState();
@@ -59,9 +60,14 @@ let inputTimer = null;
 function loadState() {
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return { ...DEFAULTS, ...(stored && typeof stored === "object" ? stored : {}) };
+    return {
+      ...DEFAULTS,
+      ...(stored && typeof stored === "object" ? stored : {}),
+      minWingAngle: 0,
+      maxWingAngle: 90,
+    };
   } catch {
-    return { ...DEFAULTS };
+    return { ...DEFAULTS, minWingAngle: 0, maxWingAngle: 90 };
   }
 }
 
@@ -71,6 +77,14 @@ function saveState() {
   } catch {
     // The calculator remains fully functional when storage is disabled.
   }
+}
+
+function applyTheme(theme) {
+  const normalized = theme === "dark" ? "dark" : "light";
+  document.documentElement.dataset.theme = normalized;
+  const action = normalized === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  elements.themeToggle.setAttribute("aria-label", action);
+  elements.themeToggle.title = action;
 }
 
 function formatNumber(value, decimals = 2) {
@@ -121,6 +135,8 @@ function readStateFromControls() {
     const parsed = Number(input.value);
     if (Number.isFinite(parsed)) state[key] = parsed;
   }
+  state.minWingAngle = 0;
+  state.maxWingAngle = 90;
 }
 
 function updatePressedButtons(buttons, activeValue, dataKey) {
@@ -164,8 +180,8 @@ function clearSelectedOutput(message = "No feasible design") {
 
 function renderEmptySvg(svg, message) {
   svg.innerHTML = `
-    <rect x="1" y="1" width="98%" height="98%" rx="12" fill="rgba(5,13,17,.42)" stroke="rgba(156,195,205,.12)"/>
-    <text x="50%" y="50%" text-anchor="middle" fill="#6f858c" font-size="15">${escapeHtml(message)}</text>
+    <rect x="1" y="1" width="98%" height="98%" rx="8" fill="var(--panel-2)" stroke="var(--line)"/>
+    <text x="50%" y="50%" text-anchor="middle" fill="var(--muted)" font-size="15">${escapeHtml(message)}</text>
   `;
 }
 
@@ -337,10 +353,10 @@ function svgPoint(x, y) {
 }
 
 function renderRangeDiagram(design) {
-  const width = 900;
-  const height = 430;
-  const paddingX = 70;
-  const paddingY = 58;
+  const width = 780;
+  const height = 620;
+  const paddingX = 54;
+  const paddingY = 32;
   const leftBoardX = -state.panelOffset;
   const rightBoardX = state.antennaSeparation + state.panelOffset;
   const angle = design.wingAngle * Math.PI / 180;
@@ -348,17 +364,21 @@ function renderRangeDiagram(design) {
   const wingDy = design.wingLength * Math.cos(angle);
   const halfCentral = design.centralSide / 2;
   const halfSpan = design.structureHeight / 2;
-  const xMin = leftBoardX - 0.12;
-  const xMax = rightBoardX + 0.12;
+  const xMin = leftBoardX - 0.16;
+  const xMax = rightBoardX + 0.24;
   const floorY = -halfSpan - state.wheelHeight;
-  const yMin = floorY - 0.08;
-  const yMax = halfSpan + 0.18;
+  const yMin = floorY - 0.04;
+  const yMax = halfSpan + 0.12;
   const scale = Math.min(
     (width - 2 * paddingX) / Math.max(0.1, xMax - xMin),
     (height - 2 * paddingY) / Math.max(0.1, yMax - yMin),
   );
-  const mapX = (x) => paddingX + (x - xMin) * scale;
-  const mapY = (y) => height - paddingY - (y - yMin) * scale;
+  const usedWidth = (xMax - xMin) * scale;
+  const usedHeight = (yMax - yMin) * scale;
+  const offsetX = (width - usedWidth) / 2;
+  const offsetY = (height - usedHeight) / 2;
+  const mapX = (x) => offsetX + (x - xMin) * scale;
+  const mapY = (y) => height - offsetY - (y - yMin) * scale;
 
   const leftTopHinge = [mapX(leftBoardX), mapY(halfCentral)];
   const leftTopOuter = [mapX(leftBoardX + wingDx), mapY(halfCentral + wingDy)];
@@ -395,24 +415,19 @@ function renderRangeDiagram(design) {
   elements.rangeSvg.innerHTML = `
     <defs>
       <marker id="arrowRange" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto-start-reverse">
-        <path d="M 0 0 L 8 4 L 0 8 z" fill="#8fa4aa"/>
+        <path d="M 0 0 L 8 4 L 0 8 z" fill="var(--muted)"/>
       </marker>
-      <linearGradient id="beamFill" x1="0" x2="1">
-        <stop offset="0" stop-color="#f2b35e" stop-opacity=".05"/>
-        <stop offset=".5" stop-color="#f2b35e" stop-opacity=".14"/>
-        <stop offset="1" stop-color="#f2b35e" stop-opacity=".03"/>
-      </linearGradient>
       <style>
-        .wood{stroke:#9fb0b5;stroke-width:8;stroke-linecap:round}.absorber{stroke:#5ee1c2;stroke-width:4;stroke-linecap:round}
-        .beam{stroke:#f2b35e;stroke-width:1.5;stroke-dasharray:6 6;opacity:.85}.return-beam{stroke:#6fc5ff;stroke-width:1;stroke-dasharray:4 7;opacity:.38}
-        .antenna{fill:#6fc5ff;stroke:#c8e8fb;stroke-width:1.2}.phase-centre{fill:#f2b35e;stroke:#071015;stroke-width:2}
-        .dimension{stroke:#8fa4aa;stroke-width:1;marker-start:url(#arrowRange);marker-end:url(#arrowRange)}
-        .extension{stroke:#536970;stroke-width:1;stroke-dasharray:3 4}.floor{stroke:#536970;stroke-width:1.2}
-        .wheel{fill:#071015;stroke:#9fb0b5;stroke-width:2}.svg-label{fill:#8fa4aa;font:12px Inter,Segoe UI,sans-serif}
-        .svg-value{fill:#e9f1f2;font:600 12px Inter,Segoe UI,sans-serif}.capture{fill:#f2b35e;font:600 12px Inter,Segoe UI,sans-serif}
+        .wood{stroke:var(--diagram-board);stroke-width:9;stroke-linecap:round}.absorber{stroke:var(--teal);stroke-width:4;stroke-linecap:round}
+        .beam-zone{fill:var(--amber-soft);opacity:.7}.beam{stroke:var(--amber);stroke-width:1.7;stroke-dasharray:6 6}.return-beam{stroke:var(--blue);stroke-width:1.2;stroke-dasharray:4 7;opacity:.58}
+        .antenna{fill:var(--blue-soft);stroke:var(--blue);stroke-width:1.4}.phase-centre{fill:var(--amber);stroke:var(--panel);stroke-width:2}
+        .dimension{stroke:var(--muted);stroke-width:1.1;marker-start:url(#arrowRange);marker-end:url(#arrowRange)}
+        .extension{stroke:var(--diagram-guide);stroke-width:1;stroke-dasharray:3 4}.floor{stroke:var(--diagram-floor);stroke-width:1.2}
+        .wheel{fill:var(--panel-2);stroke:var(--diagram-board);stroke-width:2}.svg-label{fill:var(--muted);font:13px Inter,Segoe UI,sans-serif}
+        .svg-value{fill:var(--text);font:600 13px Inter,Segoe UI,sans-serif}.capture{fill:var(--amber);font:600 13px Inter,Segoe UI,sans-serif}
       </style>
     </defs>
-    <polygon points="${svgPoint(...source)} ${svgPoint(...rightTopOuter)} ${svgPoint(...rightBottomOuter)}" fill="url(#beamFill)"/>
+    <polygon points="${svgPoint(...source)} ${svgPoint(...rightTopOuter)} ${svgPoint(...rightBottomOuter)}" class="beam-zone"/>
     ${line(source, rightTopOuter, "beam")}
     ${line(source, rightBottomOuter, "beam")}
     ${line(aut, leftTopOuter, "return-beam")}
@@ -472,13 +487,13 @@ function renderPanelDiagram(design) {
   elements.panelSvg.innerHTML = `
     <defs>
       <pattern id="absorberPattern" width="12" height="12" patternUnits="userSpaceOnUse">
-        <path d="M2 10 L6 2 L10 10 Z" fill="none" stroke="#5ee1c2" stroke-opacity=".28" stroke-width="1"/>
+        <path d="M2 10 L6 2 L10 10 Z" fill="none" stroke="var(--teal)" stroke-opacity=".34" stroke-width="1"/>
       </pattern>
       <style>
-        .centre-panel{fill:#132a32;stroke:#b3c2c6;stroke-width:1.6}.wing-top{fill:#17433e;stroke:#5ee1c2;stroke-width:1.4}
-        .wing-side{fill:#12342f;stroke:#4fc5aa;stroke-width:1.3}.texture{fill:url(#absorberPattern);stroke:none}
-        .panel-label{fill:#8fa4aa;font:12px Inter,Segoe UI,sans-serif}.panel-value{fill:#e9f1f2;font:600 12px Inter,Segoe UI,sans-serif}
-        .guide{stroke:#6f858c;stroke-width:1;stroke-dasharray:4 4}
+        .centre-panel{fill:var(--diagram-centre);stroke:var(--diagram-board);stroke-width:1.6}.wing-top{fill:var(--diagram-wing);stroke:var(--teal);stroke-width:1.4}
+        .wing-side{fill:var(--diagram-wing-side);stroke:var(--teal);stroke-width:1.3}.texture{fill:url(#absorberPattern);stroke:none}
+        .panel-label{fill:var(--muted);font:12px Inter,Segoe UI,sans-serif}.panel-value{fill:var(--text);font:600 12px Inter,Segoe UI,sans-serif}
+        .guide{stroke:var(--diagram-guide);stroke-width:1;stroke-dasharray:4 4}
       </style>
     </defs>
     ${polygon(bottom, "wing-side")}
@@ -520,15 +535,11 @@ function renderPatternDiagram(design) {
 
   elements.patternSvg.innerHTML = `
     <defs>
-      <linearGradient id="lobeGradient" x1="0" x2="1">
-        <stop offset="0" stop-color="#5ee1c2" stop-opacity=".16"/>
-        <stop offset="1" stop-color="#5ee1c2" stop-opacity=".52"/>
-      </linearGradient>
       <style>
-        .polar-grid{fill:none;stroke:#536970;stroke-width:1;stroke-dasharray:3 5;opacity:.6}.polar-axis{stroke:#536970;stroke-width:1;opacity:.6}
-        .lobe{fill:url(#lobeGradient);stroke:#5ee1c2;stroke-width:2}.capture-line{stroke:#f2b35e;stroke-width:2}
-        .nominal-line{stroke:#6fc5ff;stroke-width:1.2;stroke-dasharray:5 5}.polar-label{fill:#6f858c;font:10px Inter,Segoe UI,sans-serif}
-        .polar-value{fill:#f2b35e;font:600 11px Inter,Segoe UI,sans-serif}
+        .polar-grid{fill:none;stroke:var(--diagram-guide);stroke-width:1;stroke-dasharray:3 5;opacity:.72}.polar-axis{stroke:var(--diagram-guide);stroke-width:1;opacity:.68}
+        .lobe{fill:var(--teal-soft);stroke:var(--teal);stroke-width:2}.capture-line{stroke:var(--amber);stroke-width:2}
+        .nominal-line{stroke:var(--blue);stroke-width:1.2;stroke-dasharray:5 5}.polar-label{fill:var(--muted);font:10px Inter,Segoe UI,sans-serif}
+        .polar-value{fill:var(--amber);font:600 11px Inter,Segoe UI,sans-serif}
       </style>
     </defs>
     ${gridLevels.map((db) => {
@@ -544,7 +555,7 @@ function renderPatternDiagram(design) {
     <line x1="${centreX}" y1="${centreY}" x2="${nominalBottom[0]}" y2="${nominalBottom[1]}" class="nominal-line"/>
     <line x1="${centreX}" y1="${centreY}" x2="${capturedTop[0]}" y2="${capturedTop[1]}" class="capture-line"/>
     <line x1="${centreX}" y1="${centreY}" x2="${capturedBottom[0]}" y2="${capturedBottom[1]}" class="capture-line"/>
-    <circle cx="${centreX}" cy="${centreY}" r="4" fill="#f2b35e"/>
+    <circle cx="${centreX}" cy="${centreY}" r="4" fill="var(--amber)"/>
     <text x="${Math.min(460, capturedTop[0] + 7)}" y="${Math.max(18, capturedTop[1] - 5)}" class="polar-value">±${formatNumber(design.capturedHalfAngle, 1)}°</text>
     <text x="${centreX + 10}" y="${centreY + 18}" class="polar-label">boresight</text>
   `;
@@ -615,6 +626,16 @@ elements.showMoreButton.addEventListener("click", () => {
   markSelectedCardsAndRows();
 });
 
+elements.themeToggle.addEventListener("click", () => {
+  const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(nextTheme);
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+  } catch {
+    // Theme switching still works when storage is disabled.
+  }
+});
+
 elements.resetButton.addEventListener("click", () => {
   state = { ...DEFAULTS };
   selectedDesignId = null;
@@ -623,6 +644,7 @@ elements.resetButton.addEventListener("click", () => {
   runCalculation({ preserveSelection: false });
 });
 
+applyTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
 applyStateToControls();
 runCalculation({ preserveSelection: false });
 

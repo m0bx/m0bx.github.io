@@ -3,34 +3,45 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Discrete absorber hood geometry optimizer for an S-band free-space antenna test range.">
-  <meta name="color-scheme" content="dark">
-  <title>Absorber Hood Optimizer</title>
-  <link rel="stylesheet" href="./styles.css">
+  <meta name="description" content="Discrete chamber geometry optimizer for a free-space antenna test range.">
+  <meta name="color-scheme" content="light dark">
+  <title>Chamber optimizer</title>
+  <script>
+    try {
+      if (localStorage.getItem("chamber-optimizer-theme") === "dark") {
+        document.documentElement.dataset.theme = "dark";
+      }
+    } catch {}
+  </script>
+  <link rel="stylesheet" href="./styles.css?v=20261012-2">
 </head>
 <body>
   <div class="page-shell">
     <header class="topbar">
       <a class="brand" href="../" aria-label="Return to m0bx home">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <span>m0bx</span>
+        <span class="brandmark-circle" aria-hidden="true">
+          <span class="brandmark-inner"></span>
+        </span>
+        <span class="nav-brand">mobx</span>
       </a>
       <div class="title-block">
-        <p class="eyebrow">Groundcom free-space range</p>
-        <h1>Absorber Hood Optimizer</h1>
+        <h1>Chamber optimizer</h1>
       </div>
-      <div class="model-badges" aria-label="Model assumptions">
-        <span>TE11</span>
-        <span>S-band</span>
-        <span>Symmetric pair</span>
-      </div>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+        <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20.2 15.7A8.5 8.5 0 0 1 8.3 3.8 8.5 8.5 0 1 0 20.2 15.7Z"></path>
+        </svg>
+        <svg class="theme-icon sun-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+      </button>
     </header>
 
     <main class="app-layout">
       <aside class="control-panel" aria-label="Calculator inputs">
         <section class="control-section objective-section">
           <div class="section-heading">
-            <span class="section-number">01</span>
             <div>
               <h2>Objective</h2>
               <p>Choose what the optimizer should solve.</p>
@@ -67,7 +78,6 @@
 
         <section class="control-section">
           <div class="section-heading">
-            <span class="section-number">02</span>
             <div>
               <h2>Range geometry</h2>
               <p>Distances are measured between phase centres and wooden backing boards.</p>
@@ -108,7 +118,6 @@
 
         <section class="control-section">
           <div class="section-heading">
-            <span class="section-number">03</span>
             <div>
               <h2>Absorber modules</h2>
               <p>Panel dimensions are restricted to a manufacturing grid.</p>
@@ -155,7 +164,6 @@
 
         <section class="control-section">
           <div class="section-heading">
-            <span class="section-number">04</span>
             <div>
               <h2>Panel sizes</h2>
               <p>Search the permitted grid or evaluate one snapped design.</p>
@@ -212,22 +220,7 @@
             </div>
           </div>
 
-          <div class="field-grid two-columns">
-            <label class="field">
-              <span class="field-label">Minimum wing angle</span>
-              <span class="input-with-unit">
-                <input data-setting="minWingAngle" type="number" min="0" max="90" step="1" value="0">
-                <span>deg</span>
-              </span>
-            </label>
-            <label class="field">
-              <span class="field-label">Maximum wing angle</span>
-              <span class="input-with-unit">
-                <input data-setting="maxWingAngle" type="number" min="0" max="90" step="1" value="90">
-                <span>deg</span>
-              </span>
-            </label>
-          </div>
+          <p class="fixed-constraint"><strong>Wing-angle search</strong><span>0–90° · automatic</span></p>
         </section>
 
         <details class="advanced-panel">
@@ -312,7 +305,6 @@
         <section class="visual-card">
           <div class="card-heading">
             <div>
-              <p class="eyebrow">Selected design</p>
               <h2 id="selectedDesignTitle">Live geometry</h2>
             </div>
             <div class="selected-dimensions" id="selectedDimensions">—</div>
@@ -324,7 +316,7 @@
                 <strong>Symmetric range section</strong>
                 <span>Phase centres, backing boards and limiting rays</span>
               </figcaption>
-              <svg id="rangeSvg" viewBox="0 0 900 430" role="img" aria-label="Side view of two mirrored absorber hoods and antenna beam rays"></svg>
+              <svg id="rangeSvg" viewBox="0 0 780 620" role="img" aria-label="Side view of two mirrored absorber hoods and antenna beam rays"></svg>
             </figure>
 
             <figure class="diagram panel-diagram">
@@ -356,7 +348,6 @@
         <section class="recommendation-section">
           <div class="card-heading">
             <div>
-              <p class="eyebrow">Discrete build options</p>
               <h2>Recommended trade-offs</h2>
             </div>
             <p>Choose a card to update the drawings and detailed results.</p>
@@ -367,7 +358,6 @@
         <section class="table-card">
           <div class="card-heading table-heading">
             <div>
-              <p class="eyebrow">All feasible combinations</p>
               <h2>Design table</h2>
             </div>
             <label class="sort-control">
@@ -436,6 +426,6 @@
   </div>
 
   <noscript>This calculator requires JavaScript to run.</noscript>
-  <script type="module" src="./app.js?v=20261012-1"></script>
+  <script type="module" src="./app.js?v=20261012-2"></script>
 </body>
 </html>
