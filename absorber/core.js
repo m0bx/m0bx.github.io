@@ -467,8 +467,13 @@ export function recommendedDesigns(designs, mode = "minimum-height") {
   if (!designs.length) return [];
   const list = [];
   const seen = new Set();
-  addUniqueRecommendation(list, seen, sortDesigns(designs, "shortest", mode)[0], "Shortest");
-  addUniqueRecommendation(list, seen, sortDesigns(designs, "coverage", mode)[0], "Best coverage");
+  if (mode === "maximum-coverage") {
+    addUniqueRecommendation(list, seen, sortDesigns(designs, "coverage", mode)[0], "Best coverage");
+    addUniqueRecommendation(list, seen, sortDesigns(designs, "shortest", mode)[0], "Shortest");
+  } else {
+    addUniqueRecommendation(list, seen, sortDesigns(designs, "shortest", mode)[0], "Shortest");
+    addUniqueRecommendation(list, seen, sortDesigns(designs, "coverage", mode)[0], "Best coverage");
+  }
   addUniqueRecommendation(list, seen, sortDesigns(designs, "material", mode)[0], "Least absorber");
   addUniqueRecommendation(list, seen, sortDesigns(designs, "clearance", mode)[0], "Largest clearance");
   for (const design of sampleFrontier(designs, mode)) {
