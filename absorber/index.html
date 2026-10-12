@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Discrete absorber hood geometry optimizer for an S-band free-space antenna test range.">
+  <meta name="color-scheme" content="dark">
+  <title>Absorber Hood Optimizer</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="../" aria-label="Return to m0bx home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>m0bx</span>
+      </a>
+      <div class="title-block">
+        <p class="eyebrow">Groundcom free-space range</p>
+        <h1>Absorber Hood Optimizer</h1>
+      </div>
+      <div class="model-badges" aria-label="Model assumptions">
+        <span>TE11</span>
+        <span>S-band</span>
+        <span>Symmetric pair</span>
+      </div>
+    </header>
+
+    <main class="app-layout">
+      <aside class="control-panel" aria-label="Calculator inputs">
+        <section class="control-section objective-section">
+          <div class="section-heading">
+            <span class="section-number">01</span>
+            <div>
+              <h2>Objective</h2>
+              <p>Choose what the optimizer should solve.</p>
+            </div>
+          </div>
+
+          <div class="segmented" role="group" aria-label="Optimization objective">
+            <button class="segment is-active" type="button" data-mode="minimum-height" aria-pressed="true">
+              Minimum height
+            </button>
+            <button class="segment" type="button" data-mode="maximum-coverage" aria-pressed="false">
+              Height constrained
+            </button>
+          </div>
+
+          <label class="field mode-minimum-height">
+            <span class="field-label">Required captured half-angle</span>
+            <span class="input-with-unit">
+              <input id="targetHalfAngle" data-setting="targetHalfAngle" type="number" min="1" max="89" step="0.5" value="60">
+              <span>deg</span>
+            </span>
+            <small>Every returned design captures at least ± this angle.</small>
+          </label>
+
+          <label class="field mode-maximum-coverage is-hidden">
+            <span class="field-label">Maximum total height</span>
+            <span class="input-with-unit">
+              <input id="maxTotalHeight" data-setting="maxTotalHeight" type="number" min="0.2" max="6" step="0.05" value="2.50">
+              <span>m</span>
+            </span>
+            <small>Includes the wheel height entered below.</small>
+          </label>
+        </section>
+
+        <section class="control-section">
+          <div class="section-heading">
+            <span class="section-number">02</span>
+            <div>
+              <h2>Range geometry</h2>
+              <p>Distances are measured between phase centres and wooden backing boards.</p>
+            </div>
+          </div>
+
+          <div class="field-grid two-columns">
+            <label class="field">
+              <span class="field-label">Antenna separation</span>
+              <span class="input-with-unit">
+                <input data-setting="antennaSeparation" type="number" min="0.1" max="2" step="0.05" value="0.75">
+                <span>m</span>
+              </span>
+            </label>
+            <label class="field">
+              <span class="field-label">Phase centre to backing</span>
+              <span class="input-with-unit">
+                <input data-setting="panelOffset" type="number" min="0" max="1.5" step="0.05" value="0.40">
+                <span>m</span>
+              </span>
+            </label>
+            <label class="field">
+              <span class="field-label">Wheel height</span>
+              <span class="input-with-unit">
+                <input data-setting="wheelHeight" type="number" min="0" max="0.5" step="0.01" value="0.10">
+                <span>m</span>
+              </span>
+            </label>
+            <label class="field">
+              <span class="field-label">Minimum tip gap</span>
+              <span class="input-with-unit">
+                <input data-setting="minimumTipGap" type="number" min="0" max="1" step="0.01" value="0.10">
+                <span>m</span>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <div class="section-heading">
+            <span class="section-number">03</span>
+            <div>
+              <h2>Absorber modules</h2>
+              <p>Panel dimensions are restricted to a manufacturing grid.</p>
+            </div>
+          </div>
+
+          <div class="field-grid two-columns">
+            <label class="field">
+              <span class="field-label">Block side</span>
+              <span class="input-with-unit">
+                <input data-setting="blockSide" type="number" min="0.1" max="1" step="0.01" value="0.50">
+                <span>m</span>
+              </span>
+            </label>
+            <label class="field">
+              <span class="field-label">Pyramids per side</span>
+              <span class="input-with-unit">
+                <input data-setting="pyramidsPerSide" type="number" min="1" max="100" step="1" value="10">
+                <span>pcs</span>
+              </span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <span>
+              <strong>Dimension step</strong>
+              <small id="stepDescription">One pyramid pitch: 50 mm</small>
+            </span>
+            <div class="mini-segmented" role="group" aria-label="Panel dimension step">
+              <button class="mini-segment is-active" type="button" data-step-mode="pyramid" aria-pressed="true">Pyramid</button>
+              <button class="mini-segment" type="button" data-step-mode="block" aria-pressed="false">Block</button>
+            </div>
+          </div>
+
+          <label class="field">
+            <span class="field-label">Pyramid total height</span>
+            <span class="input-with-unit">
+              <input data-setting="pyramidHeight" type="number" min="0" max="0.6" step="0.01" value="0.20">
+              <span>m</span>
+            </span>
+            <small>Used for the approximate clearance between opposing absorber tips.</small>
+          </label>
+        </section>
+
+        <section class="control-section">
+          <div class="section-heading">
+            <span class="section-number">04</span>
+            <div>
+              <h2>Panel sizes</h2>
+              <p>Search the permitted grid or evaluate one snapped design.</p>
+            </div>
+          </div>
+
+          <div class="segmented compact" role="group" aria-label="Size selection method">
+            <button class="segment is-active" type="button" data-size-mode="optimize" aria-pressed="true">Search sizes</button>
+            <button class="segment" type="button" data-size-mode="fixed" aria-pressed="false">Fixed sizes</button>
+          </div>
+
+          <div class="size-optimize-fields">
+            <div class="field-grid two-columns">
+              <label class="field">
+                <span class="field-label">Minimum central side</span>
+                <span class="input-with-unit">
+                  <input data-setting="minCentralSide" type="number" min="0.1" max="5" step="0.05" value="0.50">
+                  <span>m</span>
+                </span>
+              </label>
+              <label class="field">
+                <span class="field-label">Maximum central side</span>
+                <span class="input-with-unit">
+                  <input data-setting="maxCentralSide" type="number" min="0.1" max="5" step="0.05" value="3.00">
+                  <span>m</span>
+                </span>
+              </label>
+            </div>
+            <label class="field">
+              <span class="field-label">Maximum wing length</span>
+              <span class="input-with-unit">
+                <input data-setting="maxWingLength" type="number" min="0" max="2" step="0.05" value="1.00">
+                <span>m</span>
+              </span>
+            </label>
+          </div>
+
+          <div class="size-fixed-fields is-hidden">
+            <div class="field-grid two-columns">
+              <label class="field">
+                <span class="field-label">Central side</span>
+                <span class="input-with-unit">
+                  <input data-setting="fixedCentralSide" type="number" min="0.1" max="5" step="0.05" value="2.00">
+                  <span>m</span>
+                </span>
+              </label>
+              <label class="field">
+                <span class="field-label">Wing length</span>
+                <span class="input-with-unit">
+                  <input data-setting="fixedWingLength" type="number" min="0" max="2" step="0.05" value="0.50">
+                  <span>m</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="field-grid two-columns">
+            <label class="field">
+              <span class="field-label">Minimum wing angle</span>
+              <span class="input-with-unit">
+                <input data-setting="minWingAngle" type="number" min="0" max="90" step="1" value="0">
+                <span>deg</span>
+              </span>
+            </label>
+            <label class="field">
+              <span class="field-label">Maximum wing angle</span>
+              <span class="input-with-unit">
+                <input data-setting="maxWingAngle" type="number" min="0" max="90" step="1" value="90">
+                <span>deg</span>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <details class="advanced-panel">
+          <summary>
+            <span>RF model</span>
+            <span class="summary-hint">Nominal TE11 and far-field check</span>
+          </summary>
+          <div class="advanced-content">
+            <div class="field-grid two-columns">
+              <label class="field">
+                <span class="field-label">Nominal edge angle</span>
+                <span class="input-with-unit">
+                  <input data-setting="patternEdgeAngle" type="number" min="1" max="89" step="0.5" value="66">
+                  <span>deg</span>
+                </span>
+              </label>
+              <label class="field">
+                <span class="field-label">Level at edge angle</span>
+                <span class="input-with-unit">
+                  <input data-setting="patternEdgeLevelDb" type="number" min="-60" max="-0.1" step="0.1" value="-12">
+                  <span>dB</span>
+                </span>
+              </label>
+              <label class="field">
+                <span class="field-label">AUT aperture diameter</span>
+                <span class="input-with-unit">
+                  <input data-setting="apertureDiameter" type="number" min="0.01" max="2" step="0.01" value="0.20">
+                  <span>m</span>
+                </span>
+              </label>
+              <label class="field">
+                <span class="field-label">Highest frequency</span>
+                <span class="input-with-unit">
+                  <input data-setting="maxFrequencyGhz" type="number" min="0.1" max="20" step="0.01" value="2.29">
+                  <span>GHz</span>
+                </span>
+              </label>
+            </div>
+            <p class="model-note">Pattern model: axisymmetric cos<sup>q</sup>(θ), fitted to the entered edge level. The power estimate is an approximation, not measured chamber performance.</p>
+          </div>
+        </details>
+
+        <button id="resetButton" class="secondary-button" type="button">Reset defaults</button>
+      </aside>
+
+      <section class="workspace" aria-label="Optimization results">
+        <div class="result-toolbar" aria-live="polite">
+          <div>
+            <span class="status-dot" id="resultStatusDot"></span>
+            <strong id="resultStatus">Calculating</strong>
+            <span id="resultCount"></span>
+          </div>
+          <div class="toolbar-facts">
+            <span id="stepFact">50 mm step</span>
+            <span id="farFieldFact">Far-field check</span>
+          </div>
+        </div>
+
+        <section class="metric-grid" aria-label="Selected design summary" aria-live="polite">
+          <article class="metric-card primary-metric">
+            <span class="metric-label">Total height</span>
+            <strong id="metricHeight">—</strong>
+            <small id="metricStructureHeight">Including wheels</small>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Captured half-angle</span>
+            <strong id="metricAngle">—</strong>
+            <small id="metricFullAngle">Principal-plane result</small>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Pattern level at edge</span>
+            <strong id="metricDb">—</strong>
+            <small>Relative to boresight</small>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Nominal cone power</span>
+            <strong id="metricPower">—</strong>
+            <small id="metricMissedPower">Within the ±66° cone</small>
+          </article>
+        </section>
+
+        <section class="visual-card">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">Selected design</p>
+              <h2 id="selectedDesignTitle">Live geometry</h2>
+            </div>
+            <div class="selected-dimensions" id="selectedDimensions">—</div>
+          </div>
+
+          <div class="visual-grid">
+            <figure class="diagram range-diagram">
+              <figcaption>
+                <strong>Symmetric range section</strong>
+                <span>Phase centres, backing boards and limiting rays</span>
+              </figcaption>
+              <svg id="rangeSvg" viewBox="0 0 900 430" role="img" aria-label="Side view of two mirrored absorber hoods and antenna beam rays"></svg>
+            </figure>
+
+            <figure class="diagram panel-diagram">
+              <figcaption>
+                <strong>Panel form</strong>
+                <span>Four equal wings; corner gaps remain open</span>
+              </figcaption>
+              <svg id="panelSvg" viewBox="0 0 500 420" role="img" aria-label="Isometric view of the square central panel and four equal wings"></svg>
+            </figure>
+
+            <figure class="diagram pattern-diagram">
+              <figcaption>
+                <strong>Nominal TE11 pattern</strong>
+                <span>cos<sup>q</sup>(θ), −12 dB at ±66°</span>
+              </figcaption>
+              <svg id="patternSvg" viewBox="0 0 500 420" role="img" aria-label="Normalized TE11 radiation pattern with captured angle highlighted"></svg>
+            </figure>
+          </div>
+        </section>
+
+        <section id="warningPanel" class="warning-panel" aria-live="polite">
+          <div class="warning-icon" aria-hidden="true">i</div>
+          <div>
+            <strong>Model scope</strong>
+            <ul id="warningList"></ul>
+          </div>
+        </section>
+
+        <section class="recommendation-section">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">Discrete build options</p>
+              <h2>Recommended trade-offs</h2>
+            </div>
+            <p>Choose a card to update the drawings and detailed results.</p>
+          </div>
+          <div id="recommendationGrid" class="recommendation-grid"></div>
+        </section>
+
+        <section class="table-card">
+          <div class="card-heading table-heading">
+            <div>
+              <p class="eyebrow">All feasible combinations</p>
+              <h2>Design table</h2>
+            </div>
+            <label class="sort-control">
+              <span>Sort by</span>
+              <select id="sortSelect">
+                <option value="recommended">Recommended</option>
+                <option value="shortest">Shortest</option>
+                <option value="coverage">Best coverage</option>
+                <option value="material">Least absorber</option>
+                <option value="clearance">Largest clearance</option>
+              </select>
+            </label>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Central</th>
+                  <th scope="col">Wing</th>
+                  <th scope="col">Wing angle</th>
+                  <th scope="col">Total height</th>
+                  <th scope="col">Half-angle</th>
+                  <th scope="col">Edge level</th>
+                  <th scope="col">Cone power</th>
+                  <th scope="col">Tip gap</th>
+                  <th scope="col">Absorber area</th>
+                  <th scope="col">Blocks min.</th>
+                </tr>
+              </thead>
+              <tbody id="designTableBody"></tbody>
+            </table>
+          </div>
+          <div class="table-footer">
+            <span id="tableSummary"></span>
+            <button id="showMoreButton" class="text-button" type="button">Show more</button>
+          </div>
+        </section>
+
+        <details class="method-card">
+          <summary>Calculation method and limitations</summary>
+          <div class="method-content">
+            <div>
+              <h3>Geometry</h3>
+              <p>The central backing is a square with side <em>C</em>. Each wing has surface length <em>W</em>. The wing angle <em>α</em> is measured from the central backing plane. In a principal-plane section, the structure span is <span class="formula">H = C + 2W cos α</span>. Wheel height is then added.</p>
+              <p>The captured half-angle is evaluated from the opposite antenna phase centre to the outer edge of the backing: <span class="formula">θ = atan[(C/2 + W cos α)/(R + d − W sin α)]</span>.</p>
+            </div>
+            <div>
+              <h3>RF estimate</h3>
+              <p>The normalized TE11 power pattern is approximated as <span class="formula">P(θ) ∝ cos<sup>q</sup> θ</span>. The exponent is fitted so that the entered edge angle has the entered relative level. The displayed cone-power fraction assumes rotational symmetry.</p>
+              <p>The far-field indicator uses <span class="formula">R<sub>FF</sub> = 2D²/λ</span>. It is a planning check and does not replace S21 ripple, time-domain gating or movement tests.</p>
+            </div>
+            <div>
+              <h3>Construction limits</h3>
+              <p>Four rectangular wings leave diagonal corner openings. The optimizer covers the vertical and horizontal principal planes only. Add corner infill or overlapping absorber pieces if full azimuthal interception is required. Stands, antenna bodies, hinges and cable clearances are not modelled.</p>
+              <p>Minimum block count is an area lower bound and assumes offcuts can be reused. Confirm the final cutting layout before ordering material.</p>
+            </div>
+          </div>
+        </details>
+
+        <footer class="source-footer">
+          <span>Model basis: S-band feed TE11 far-field cuts and the current free-space range requirements.</span>
+          <a href="https://drive.google.com/file/d/1R05xq3QdlGE3IMtQDqU07OA0gIugR6AZ/view" target="_blank" rel="noreferrer">Open feed report</a>
+        </footer>
+      </section>
+    </main>
+  </div>
+
+  <noscript>This calculator requires JavaScript to run.</noscript>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
