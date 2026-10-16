@@ -588,6 +588,7 @@ export function planBlocks({
   blockSide = 0.5,
   hoods = 2,
   sparePercent = 0,
+  panels = null,
 }) {
   const n = Math.max(1, Math.round(pyramidsPerSide));
   const pitch = blockSide / n;
@@ -595,8 +596,17 @@ export function planBlocks({
   const w = Math.max(0, Math.round(wingCells));
 
   const panelTypes = [];
-  if (c > 0) panelTypes.push({ name: "Central panel", cols: c, rows: c, count: hoods });
-  if (c > 0 && w > 0) panelTypes.push({ name: "Wing", cols: c, rows: w, count: 4 * hoods });
+  if (Array.isArray(panels)) {
+    // Generalised use (enclosed chamber): caller supplies {name, cols, rows, count}.
+    for (const p of panels) {
+      const cols = Math.round(p.cols);
+      const rows = Math.round(p.rows);
+      if (cols > 0 && rows > 0 && p.count > 0) panelTypes.push({ name: p.name, cols, rows, count: p.count });
+    }
+  } else {
+    if (c > 0) panelTypes.push({ name: "Central panel", cols: c, rows: c, count: hoods });
+    if (c > 0 && w > 0) panelTypes.push({ name: "Wing", cols: c, rows: w, count: 4 * hoods });
+  }
 
   let wholeBlocks = 0;
   let totalPyramids = 0;
