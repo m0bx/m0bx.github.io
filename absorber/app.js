@@ -8,7 +8,7 @@ import {
   recommendedDesigns,
   sortDesigns,
   validateSettings,
-} from "./core.js?v=20261012-3";
+} from "./core.js?v=20261017-1";
 
 const STORAGE_KEY = "absorber-hood-optimizer-v1";
 const THEME_STORAGE_KEY = "chamber-optimizer-theme";

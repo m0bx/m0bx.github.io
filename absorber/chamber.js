@@ -1,4 +1,4 @@
-import { farFieldDistance, planBlocks } from "./core.js";
+import { farFieldDistance, planBlocks } from "./core.js?v=20261017-1";
 
 export const CHAMBER_DEFAULTS = Object.freeze({
   sizeMode: "auto", // "auto" | "fixed"

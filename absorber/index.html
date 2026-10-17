@@ -14,8 +14,8 @@
       }
     } catch {}
   </script>
-  <link rel="stylesheet" href="./brand.css?v=20261012-3">
-  <link rel="stylesheet" href="./styles.css?v=20261012-3">
+  <link rel="stylesheet" href="./brand.css?v=20261017-1">
+  <link rel="stylesheet" href="./styles.css?v=20261017-1">
 </head>
 <body>
   <div class="page-shell">
@@ -40,6 +40,13 @@
       </button>
     </header>
 
+    <div class="view-tabs" id="tabList" role="tablist" aria-label="Design view">
+      <button id="tab-panels" class="view-tab" role="tab" type="button" data-tab="panels" aria-controls="view-panels" aria-selected="false" tabindex="-1">Absorber panels</button>
+      <button id="tab-chamber" class="view-tab" role="tab" type="button" data-tab="chamber" aria-controls="view-chamber" aria-selected="true">Enclosed chamber</button>
+      <button id="tab-compare" class="view-tab" role="tab" type="button" data-tab="compare" aria-controls="view-compare" aria-selected="false" tabindex="-1">Comparison</button>
+    </div>
+
+    <div id="view-panels" role="tabpanel" aria-labelledby="tab-panels" hidden>
     <main class="app-layout">
       <aside class="control-panel" aria-label="Calculator inputs">
         <section class="control-section objective-section">
@@ -518,9 +525,15 @@
         </footer>
       </section>
     </main>
+    </div>
+    <div id="view-chamber" role="tabpanel" aria-labelledby="tab-chamber"></div>
+    <div id="view-compare" role="tabpanel" aria-labelledby="tab-compare" hidden>
+      <section class="warning-panel"><div class="warning-icon" aria-hidden="true">i</div><div><strong>Comparison not available yet</strong><ul><li>This view is added in a later step.</li></ul></div></section>
+    </div>
   </div>
 
   <noscript>This calculator requires JavaScript to run.</noscript>
-  <script type="module" src="./app.js?v=20261012-3"></script>
+  <script type="module" src="./app.js?v=20261017-1"></script>
+  <script type="module" src="./chamber-ui.js?v=20261017-1"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { calculateChamber as C, farFieldSeparation } from "./chamber.js";
-import * as now from "./core.js";
+import { calculateChamber as C, farFieldSeparation } from "./chamber.js?v=20261017-1";
+import * as now from "./core.js?v=20261017-1";
 import * as old from "/tmp/core_orig.mjs";
 
 const near = (a, b, m) => assert.ok(Math.abs(a - b) < 1e-9, `${m}: ${a} vs ${b}`);
