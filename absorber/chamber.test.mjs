@@ -1,16 +1,19 @@
 import assert from "node:assert/strict";
 import { calculateChamber as C, farFieldSeparation } from "./chamber.js?v=20261017-1";
 import * as now from "./core.js?v=20261017-1";
-import * as old from "/tmp/core_orig.mjs";
+// Optional: pass the original core.js path as OLD_CORE to run the open-panel regression check.
+const old = process.env.OLD_CORE ? await import(process.env.OLD_CORE) : null;
 
 const near = (a, b, m) => assert.ok(Math.abs(a - b) < 1e-9, `${m}: ${a} vs ${b}`);
 
 // 1. Open-panel regression: identical designs and block plans for defaults.
+if (old) {
 const A = now.generateDesigns({}), O = old.generateDesigns({});
 assert.deepEqual(A.designs, O.designs);
 const d = now.recommendedDesigns(A.designs)[0];
 const args = { centralCells: d.centralCells, wingCells: d.wingCells, pyramidsPerSide: 10, blockSide: 0.5, hoods: 2, sparePercent: 5 };
 assert.deepEqual(now.planBlocks(args), old.planBlocks(args));
+} else console.log("skipped open-panel regression (set OLD_CORE)");
 
 // Missing / invalid N
 for (const n of [null, "", 0, 2.5, -3]) assert.equal(C({ pyramidsPerSide: n }).valid, false);

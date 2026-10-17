@@ -1224,3 +1224,4 @@ noscript {
 .button-row{display:flex;gap:8px;flex-wrap:wrap}
 .button-row .secondary-button{flex:1 1 150px}
 .c-ghost{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:5 4}.c-woodf{fill:var(--diagram-board);fill-opacity:.35;stroke:var(--diagram-board)}
+.c-scroll{overflow-x:auto}.c-scroll>svg.c-wide{min-width:640px}

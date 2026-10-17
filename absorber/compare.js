@@ -87,7 +87,7 @@ function scaleSvg(p, c) {
   const ln = (x1, y1, x2, y2, cls) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="${cls}"/>`;
   const dot = (x, y) => `<circle cx="${x}" cy="${y}" r="4" class="c-pc"/>`;
   const board = (x, sign) => ln(x, cyp - hc, x, cyp + hc, "k-board") + ln(x, cyp - hc, x + sign * dx, cyp - hc - dy, "k-board") + ln(x, cyp + hc, x + sign * dx, cyp + hc + dy, "k-board");
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Open-panel design and enclosed chamber drawn at the same scale">
+  return `<svg class="c-wide" viewBox="0 0 ${W} ${H}" role="img" aria-label="Open-panel design and enclosed chamber drawn at the same scale">
   <style>.k-board{stroke:var(--teal);stroke-width:4;stroke-linecap:round}.k-tag{fill:var(--text);font:600 13px Inter,Segoe UI,sans-serif}</style>
   ${board(xp, 1)}${board(xp + Lp * k, -1)}${dot(xp + s.panelOffset * k, cyp)}${dot(xp + (s.panelOffset + s.antennaSeparation) * k, cyp)}
   <text x="${pad}" y="${pad - 12}" class="k-tag">Absorber panels · ${fmt(Lp, 2)} m × ${fmt(Hp, 2)} m</text>
@@ -115,7 +115,7 @@ function render() {
     ${inp.differ ? `<section class="warning-panel is-error" role="status"><div class="warning-icon" aria-hidden="true">!</div><div><strong>Inputs differ</strong><ul><li>The two saved modes use different inputs, so this is not a like-for-like comparison. Highlighted rows below show the differences. The modes' settings are not merged.</li></ul></div></section>` : ""}
     <section class="order-card"><div class="card-heading"><div><h2>Selected designs</h2><p>Panels: C ${fmt(p.design.centralSide, 2)} m, W ${fmt(p.design.wingLength, 2)} m, α ${fmt(p.design.wingAngle, 1)}°. Chamber: ${esc(c.recommendation ?? "fixed external size")}.</p></div></div>
     <div class="table-wrap"><table class="compact-table"><thead><tr><th class="text-left">Metric</th><th>Absorber panels</th><th>Enclosed chamber</th><th>Difference</th><th>Change</th></tr></thead><tbody>${ROWS.map((r) => row(r, pm, cm)).join("")}</tbody></table></div></section>
-    <section class="visual-card"><div class="card-heading"><div><h2>Same-scale side view</h2></div></div><figure class="diagram">${scaleSvg(p, c)}</figure></section>
+    <section class="visual-card"><div class="card-heading"><div><h2>Same-scale side view</h2></div></div><figure class="diagram c-scroll">${scaleSvg(p, c)}</figure></section>
     <section class="order-card"><div class="card-heading"><div><h2>Inputs used</h2></div></div>${inp.html}</section>
     <section class="warning-panel"><div class="warning-icon" aria-hidden="true">i</div><div><ul><li>Percentages are chamber relative to panels. The two models answer different RF questions; neither is an RF-validated result.</li></ul></div></section>
   </main>`;

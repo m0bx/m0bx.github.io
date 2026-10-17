@@ -186,7 +186,7 @@ function sectionSvg(r) {
   const dim = (xa, xb, y, text) => `<line x1="${X(xa)}" y1="${y}" x2="${X(xb)}" y2="${y}" class="c-dim"/><line x1="${X(xa)}" y1="${y - 4}" x2="${X(xa)}" y2="${y + 4}" class="c-dim"/><line x1="${X(xb)}" y1="${y - 4}" x2="${X(xb)}" y2="${y + 4}" class="c-dim"/><text x="${(X(xa) + X(xb)) / 2}" y="${y - 6}" text-anchor="middle" class="c-v">${text}</text>`;
   const by = Y(d.externalSide) + 22;
   return `<section class="visual-card"><div class="card-heading"><div><h2>Longitudinal section</h2></div><div class="selected-dimensions">Rays at ±${BEAM_HALF_ANGLE_DEG}° (132° full angle)</div></div>
-  <figure class="diagram"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Longitudinal section of the six-panel chamber with antennas, absorber lining and ±66 degree rays">
+  <figure class="diagram c-scroll"><svg class="c-wide" viewBox="0 0 ${W} ${H}" role="img" aria-label="Longitudinal section of the six-panel chamber with antennas, absorber lining and ±66 degree rays">
   <style>.c-wood{fill:var(--diagram-board);opacity:.55;stroke:var(--diagram-board)}.c-abs{fill:var(--teal-soft);stroke:var(--teal);stroke-width:1.2}.c-in{fill:var(--panel);stroke:none}
   .c-ray{stroke-width:1.5;stroke-dasharray:6 5}.c-tx{stroke:var(--amber)}.c-rx{stroke:var(--blue);opacity:.7}.c-hit{fill:var(--panel);stroke:var(--amber)}
   .c-bore{stroke:var(--text);stroke-width:1.2}.c-ant{fill:var(--blue-soft);stroke:var(--blue)}.c-pc{fill:var(--amber);stroke:var(--panel);stroke-width:2}
