@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Prepare a board-sized image and EasyEDA Pro export script for JLCPCB multi-colour silkscreen.">
+  <meta name="color-scheme" content="light dark">
+  <title>PCB colour silkscreen</title>
+  <link rel="icon" href="../icon.ico">
+  <script>
+    try {
+      if (localStorage.getItem("pcb-silkscreen-theme") === "dark") {
+        document.documentElement.dataset.theme = "dark";
+      }
+    } catch {}
+  </script>
+  <link rel="stylesheet" href="./styles.css?v=20261015-1">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand-and-mark" href="../" aria-label="Return to m0bx home">
+        <span class="brandmark-circle" aria-hidden="true"><span class="brandmark-inner"></span></span>
+        <span class="nav-brand">mobx</span>
+      </a>
+      <div class="title-block">
+        <h1>PCB colour silkscreen</h1>
+      </div>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+        <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20.2 15.7A8.5 8.5 0 0 1 8.3 3.8 8.5 8.5 0 1 0 20.2 15.7Z"></path>
+        </svg>
+        <svg class="theme-icon sun-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+      </button>
+    </header>
+
+    <main class="app-layout">
+      <aside class="control-panel" aria-label="Silkscreen inputs">
+        <section class="control-section">
+          <div class="step-heading">
+            <span class="step-number">1</span>
+            <div>
+              <h2>Board files</h2>
+              <p>Upload the Gerber ZIP exported from Altium or another PCB tool.</p>
+            </div>
+          </div>
+          <label class="file-drop" id="gerberDrop">
+            <input id="gerberInput" type="file" accept=".zip,application/zip">
+            <span class="file-drop-title">Choose Gerber ZIP</span>
+            <span class="file-drop-detail" id="gerberFileName">No file selected</span>
+          </label>
+          <div class="inline-status" id="gerberStatus" aria-live="polite">Waiting for a board outline.</div>
+        </section>
+
+        <section class="control-section">
+          <div class="step-heading">
+            <span class="step-number">2</span>
+            <div>
+              <h2>Colour artwork</h2>
+              <p>PNG and JPEG are supported. Processing stays in this browser.</p>
+            </div>
+          </div>
+          <label class="file-drop" id="imageDrop">
+            <input id="imageInput" type="file" accept="image/png,image/jpeg">
+            <span class="file-drop-title">Choose image</span>
+            <span class="file-drop-detail" id="imageFileName">No file selected</span>
+          </label>
+          <div class="inline-status" id="imageStatus" aria-live="polite">Waiting for artwork.</div>
+        </section>
+
+        <section class="control-section">
+          <div class="step-heading">
+            <span class="step-number">3</span>
+            <div>
+              <h2>Placement</h2>
+              <p>Fit the artwork into the rectangular XY extent of the board.</p>
+            </div>
+          </div>
+
+          <span class="field-label">Image fit</span>
+          <div class="segmented three" role="group" aria-label="Image fit">
+            <button class="segment is-active" type="button" data-fit="contain" aria-pressed="true">Contain</button>
+            <button class="segment" type="button" data-fit="cover" aria-pressed="false">Cover</button>
+            <button class="segment" type="button" data-fit="stretch" aria-pressed="false">Stretch</button>
+          </div>
+
+          <div class="field-grid two-columns">
+            <label class="field">
+              <span class="field-label">Edge margin</span>
+              <span class="input-with-unit">
+                <input id="marginInput" type="number" min="0" max="100" step="0.1" value="0">
+                <span>mm</span>
+              </span>
+            </label>
+            <label class="field">
+              <span class="field-label">Raster resolution</span>
+              <select id="dpiInput">
+                <option value="300">300 DPI</option>
+                <option value="600" selected>600 DPI</option>
+                <option value="1200">1200 DPI</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field-label">Print side</span>
+              <select id="sideInput">
+                <option value="top" selected>Top silkscreen</option>
+                <option value="bottom">Bottom silkscreen</option>
+              </select>
+            </label>
+            <label class="field checkbox-field">
+              <input id="mirrorInput" type="checkbox">
+              <span>
+                <span class="field-label">Mirror artwork</span>
+                <small>Usually only needed for a deliberate reversed print.</small>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <button id="prepareButton" class="primary-button" type="button" disabled>Prepare silkscreen output</button>
+      </aside>
+
+      <section class="workspace" aria-label="Preview and output">
+        <div class="result-toolbar">
+          <div>
+            <span class="status-dot" id="statusDot"></span>
+            <strong id="resultStatus">Add a Gerber ZIP and image</strong>
+          </div>
+          <span class="local-note">Local processing only</span>
+        </div>
+
+        <section class="metric-grid" aria-label="Parsed dimensions">
+          <article class="metric-card primary-metric">
+            <span class="metric-label">Board size</span>
+            <strong id="boardSizeMetric">—</strong>
+            <small id="outlineMetric">Outline not loaded</small>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Board origin</span>
+            <strong id="originMetric">—</strong>
+            <small>Minimum X and Y</small>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Source image</span>
+            <strong id="sourceMetric">—</strong>
+            <small id="sourceRatioMetric">Artwork not loaded</small>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Prepared raster</span>
+            <strong id="outputMetric">—</strong>
+            <small id="outputDpiMetric">Generated on demand</small>
+          </article>
+        </section>
+
+        <section class="preview-card">
+          <div class="card-heading">
+            <div>
+              <h2>Board preview</h2>
+              <p>The dashed rectangle shows the selected edge margin.</p>
+            </div>
+            <span class="fit-readout" id="fitReadout">Contain</span>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="previewCanvas" width="1100" height="720" aria-label="Silkscreen placement preview"></canvas>
+          </div>
+        </section>
+
+        <section class="output-card" id="outputCard">
+          <div class="card-heading">
+            <div>
+              <h2>EasyEDA Pro hand-off</h2>
+              <p>The generated script embeds the prepared PNG, places it at the parsed origin and exports a colour-Gerber ZIP.</p>
+            </div>
+            <span class="output-state" id="outputState">Not prepared</span>
+          </div>
+
+          <div class="action-row">
+            <button id="downloadPngButton" class="secondary-button" type="button" disabled>Download prepared PNG</button>
+            <button id="copyScriptButton" class="secondary-button" type="button" disabled>Copy EasyEDA script</button>
+            <button id="downloadScriptButton" class="secondary-button" type="button" disabled>Download script</button>
+          </div>
+
+          <div class="script-summary">
+            <div>
+              <span>Target layer</span>
+              <strong id="scriptLayer">—</strong>
+            </div>
+            <div>
+              <span>Top-left position</span>
+              <strong id="scriptPosition">—</strong>
+            </div>
+            <div>
+              <span>Placed size</span>
+              <strong id="scriptSize">—</strong>
+            </div>
+          </div>
+
+          <ol class="handoff-steps">
+            <li>Open the matching PCB in EasyEDA Pro. Its board origin must match the uploaded Gerbers.</li>
+            <li>Open <strong>Settings → Extension → Script</strong>, paste the generated code and run it.</li>
+            <li>Check the colour silkscreen in EasyEDA preview and in JLCPCB Gerber Viewer before ordering.</li>
+          </ol>
+
+          <p class="warning-note"><strong>Why the extra EasyEDA step?</strong> The JLCPCB <code>.FCTS</code> file is an opaque EasyEDA production format. A normal GitHub Pages site cannot create it directly, but EasyEDA’s own API can.</p>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <noscript>This tool requires JavaScript to parse Gerbers and prepare the image.</noscript>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script type="module" src="./app.js?v=20261015-1"></script>
+</body>
+</html>
