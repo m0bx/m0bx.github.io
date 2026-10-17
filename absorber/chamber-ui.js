@@ -133,7 +133,7 @@ function render() {
     <tr><th scope="row" class="text-left">Pyramid pitch B/N</th><td>${fmt(d.pitch * 1000, 1)} mm</td></tr>
     ${r.valid ? `<tr><th scope="row" class="text-left">Absorber area / nominal wood area</th><td>${fmt(r.areas.absorber, 2)} m² / ${fmt(r.areas.wood, 2)} m²</td></tr>` : ""}</tbody></table></div></section>`;
   const order = r.valid ? orderCard(r) : "";
-  $("#cOut").innerHTML = status + cards + sectionSvg(r) + facts + order + (r.valid ? wood(r) : "") + limitations();
+  $("#cOut").innerHTML = status + cards + sectionSvg(r) + extraSvgs(r) + facts + order + (r.valid ? wood(r) : "") + limitations();
 }
 
 function orderCard(r) {
@@ -207,6 +207,58 @@ function sectionSvg(r) {
   ${dim(x0, x1, by, `clear ${fmt(d.clearLength, 3)} m`)}${dim(t, d.externalLength - t, by + 20, `backing ${fmt(d.backingLength, 3)} m`)}${dim(0, d.externalLength, by + 40, `external ${fmt(d.externalLength, 3)} m`)}
   <text x="${X(0)}" y="${Y(0) - 8}" class="c-l">phase centre to backing ${fmt(d.phaseToBacking, 3)} m</text>
   </svg></figure></section>`;
+}
+
+/* ---------- cross-section and 3D cutaway ---------- */
+function extraSvgs(r) {
+  const d = r.dims;
+  if (![d.externalLength, d.externalSide, d.clearSide].every((v) => v > 0)) return "";
+  return `<section class="visual-card"><div class="card-heading"><div><h2>Cross-section and cutaway</h2></div></div><div class="visual-grid">
+  <figure class="diagram"><figcaption><strong>Square cross-section</strong><span>Boards, absorber, clear tip square and aperture</span></figcaption>${crossSvg(r)}</figure>
+  <figure class="diagram"><figcaption><strong>Six-panel cutaway</strong><span>Roof and near side wall removed for viewing only</span></figcaption>${cutawaySvg(r)}</figure></div></section>`;
+}
+
+function crossSvg(r) {
+  const d = r.dims, t = state.boardThickness, h = state.pyramidHeight, D = state.apertureDiameter;
+  const W = 440, H = 440, ox = 70, oy = 36, k = 300 / d.externalSide;
+  const sq = (inset, cls) => `<rect x="${ox + inset * k}" y="${oy + inset * k}" width="${(d.externalSide - 2 * inset) * k}" height="${(d.externalSide - 2 * inset) * k}" class="${cls}"/>`;
+  const cx = ox + 150, cy = oy + 150, tipR = ox + (t + h) * k + d.clearSide * k;
+  const dim = (xa, xb, y, text) => `<line x1="${xa}" y1="${y}" x2="${xb}" y2="${y}" class="c-dim"/><line x1="${xa}" y1="${y - 4}" x2="${xa}" y2="${y + 4}" class="c-dim"/><line x1="${xb}" y1="${y - 4}" x2="${xb}" y2="${y + 4}" class="c-dim"/><text x="${(xa + xb) / 2}" y="${y - 6}" text-anchor="middle" class="c-v">${text}</text>`;
+  const by = oy + 300 + 24;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Square cross-section with wooden boards, absorber layers, clear tip square and centred aperture">
+  ${sq(0, "c-wood")}${sq(t, "c-abs")}${sq(t + h, "c-in")}
+  <circle cx="${cx}" cy="${cy}" r="${D / 2 * k}" class="c-ant"/><circle cx="${cx}" cy="${cy}" r="3.5" class="c-pc"/>
+  <line x1="${cx + D / 2 * k}" y1="${cy}" x2="${tipR}" y2="${cy}" class="c-dim"/>
+  <text x="${(cx + D / 2 * k + tipR) / 2}" y="${cy - 6}" text-anchor="middle" class="c-v">g ${fmt(d.apertureClearance, 3)}</text>
+  <text x="${cx}" y="${cy + 4}" text-anchor="middle" class="c-l" dy="${D / 2 * k + 16}">D ${fmt(D, 2)} m</text>
+  ${dim(ox + (t + h) * k, ox + (t + h + d.clearSide) * k, by, `clear ${fmt(d.clearSide, 3)} m`)}
+  ${dim(ox + t * k, ox + (t + d.backingSide) * k, by + 20, `backing ${fmt(d.backingSide, 3)} m`)}
+  ${dim(ox, ox + 300, by + 40, `external ${fmt(d.externalSide, 3)} m`)}</svg>`;
+}
+
+function cutawaySvg(r) {
+  const d = r.dims, L = d.externalLength, S = d.externalSide, t = state.boardThickness, h = state.pyramidHeight;
+  const W = 520, H = 400, ax = 0.55, ay = 0.35;
+  const k = Math.min(430 / (L + ax * S), 280 / (S * (1 + ay))), ox = 30, oy = H - 70;
+  const P = (x, y, z) => [ox + (x + ax * z) * k, oy - (y + ay * z) * k];
+  const poly = (pts, cls) => `<polygon points="${pts.map((p) => P(...p).map((v) => v.toFixed(1)).join(",")).join(" ")}" class="${cls}"/>`;
+  const back = [[0, 0, S], [L, 0, S], [L, S, S], [0, S, S]], floor = [[0, 0, 0], [L, 0, 0], [L, 0, S], [0, 0, S]];
+  const right = [[L, 0, 0], [L, S, 0], [L, S, S], [L, 0, S]], left = [[0, 0, 0], [0, S, 0], [0, S, S], [0, 0, S]];
+  const roof = [[0, S, 0], [L, S, 0], [L, S, S], [0, S, S]], front = [[0, 0, 0], [L, 0, 0], [L, S, 0], [0, S, 0]];
+  const sx = t + h + d.rearClearance, ax2 = sx + state.separation, mid = S / 2;
+  const a = P(sx, mid, mid), b = P(ax2, mid, mid), lab = P(L / 2, 0, 0);
+  const txt = (p, text, dx = 0, dy = 0, cls = "c-l") => `<text x="${p[0] + dx}" y="${p[1] + dy}" class="${cls}" text-anchor="middle">${text}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cutaway of the six-panel absorber-lined chamber with roof and near side wall removed">
+  ${poly(back, "c-abs")}${poly(floor, "c-abs")}${poly(right, "c-abs")}
+  ${poly(left, "c-woodf")}${poly(roof, "c-ghost")}${poly(front, "c-ghost")}
+  <line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" class="c-bore"/>
+  <circle cx="${a[0]}" cy="${a[1]}" r="5" class="c-pc"/><circle cx="${b[0]}" cy="${b[1]}" r="5" class="c-pc"/>
+  ${txt(a, "Illumination", 0, 20)}${txt(b, "AUT", 0, 20)}
+  ${txt(P(0, S / 2, S / 2), "End S × S", -12, 0)}${txt(P(L, S / 2, S / 2), "End S × S", 34, 0)}
+  ${txt(lab, "Near side wall (removed): L × S", 0, 22, "c-l")}
+  ${txt(P(L / 2, S, S / 2), "Roof (removed): L × S", 0, -8)}
+  ${txt(P(L / 2, 0, S / 2), "Floor: L × S", 0, 4)}${txt(P(L / 2, S / 2, S), "Far side wall: L × S", 0, 4)}
+  <text x="${W / 2}" y="${H - 8}" text-anchor="middle" class="c-l">6 separate panels · all 6 faces lined and counted · removed faces dashed</text></svg>`;
 }
 
 /* ---------- events ---------- */

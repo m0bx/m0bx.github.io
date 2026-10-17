@@ -50,5 +50,5 @@ near(r.areas.wood, 2 * 1.032 ** 2 + 4 * 1.582 * 1.032, "wood");
 // 9. spare % and price propagate
 assert.ok(r.plan.spareBlocks > 0); assert.equal(r.cost, r.plan.totalBlocks * 100);
 console.log({ blocks: r.plan.totalBlocks, whole: r.plan.wholeBlocks, cut: r.plan.cutBlocks, scrapPyramids: r.plan.scrapPyramids });
-console.log("grep 0.05/50 mm in chamber.js:", /0\.05\b|50\s*mm/.test((await import("node:fs")).readFileSync("chamber.js", "utf8")) ? "FOUND" : "none");
+console.log("grep 0.05/50 mm in chamber.js:", /0\.05\b|50\s*mm/.test((await import("node:fs")).readFileSync(new URL("./chamber.js", import.meta.url), "utf8")) ? "FOUND" : "none");
 console.log("ALL CHECKS PASSED");
