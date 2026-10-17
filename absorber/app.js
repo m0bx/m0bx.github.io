@@ -8,7 +8,7 @@ import {
   recommendedDesigns,
   sortDesigns,
   validateSettings,
-} from "./core.js?v=20261017-1";
+} from "./core.js?v=20261017-2";
 
 const STORAGE_KEY = "absorber-hood-optimizer-v1";
 const THEME_STORAGE_KEY = "chamber-optimizer-theme";
@@ -355,9 +355,28 @@ function renderOrder(design) {
     "Pieces are written as width × length in pyramids and may be rotated. The cutting plan is a practical heuristic, so check it before ordering.";
 }
 
+const SNAPSHOT_KEY = "absorber-panel-selected-v1";
+
+function saveSelectedSnapshot(design) {
+  try {
+    if (!design) { localStorage.removeItem(SNAPSHOT_KEY); return; }
+    const plan = blockPlan(design);
+    const keys = ["antennaSeparation", "panelOffset", "blockSide", "pyramidsPerSide", "pyramidHeight", "wheelHeight", "sparePercent", "blockPrice", "apertureDiameter", "maxFrequencyGhz"];
+    const { totalHeight, structureHeight, centralSide, wingLength, wingAngle, absorberArea } = design;
+    localStorage.setItem(SNAPSHOT_KEY, JSON.stringify({
+      settings: Object.fromEntries(keys.map((k) => [k, state[k]])),
+      design: { totalHeight, structureHeight, centralSide, wingLength, wingAngle, absorberArea },
+      plan: { totalBlocks: plan.totalBlocks, wholeBlocks: plan.wholeBlocks, cutBlocks: plan.cutBlocks, scrapPyramids: plan.scrapPyramids, hoods: 2 },
+    }));
+  } catch {
+    // Comparison simply has no panel snapshot when storage is disabled.
+  }
+}
+
 function renderSelectedDesign() {
   const design = selectedDesign();
   if (!design) {
+    saveSelectedSnapshot(null);
     clearSelectedOutput(calculation?.error || "No feasible design");
     renderWarnings(null);
     return;
@@ -378,6 +397,7 @@ function renderSelectedDesign() {
   renderPanelDiagram(design);
   renderPatternDiagram(design);
   renderOrder(design);
+  saveSelectedSnapshot(design);
   renderWarnings(design);
   markSelectedCardsAndRows();
 }

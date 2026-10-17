@@ -1,14 +1,9 @@
-import { CHAMBER_DEFAULTS, BEAM_HALF_ANGLE_DEG, SEPARATION_MAX, calculateChamber, farFieldSeparation, farFieldStatus } from "./chamber.js?v=20261017-1";
+import { $, esc, fmt, load, save, TAB_EVENT } from "./util.js?v=20261017-2";
+import { CHAMBER_DEFAULTS, BEAM_HALF_ANGLE_DEG, SEPARATION_MAX, calculateChamber, farFieldSeparation, farFieldStatus } from "./chamber.js?v=20261017-2";
 
 const KEY = "absorber-chamber-v1";
 const TAB_KEY = "absorber-active-tab-v1";
 const TABS = ["panels", "chamber", "compare"];
-const $ = (s, r = document) => r.querySelector(s);
-const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[c]);
-const fmt = (v, d = 2) => (Number.isFinite(v) ? v.toLocaleString("en", { minimumFractionDigits: d, maximumFractionDigits: d }) : "—");
-const load = (k, d) => { try { return { ...d, ...JSON.parse(localStorage.getItem(k)) }; } catch { return { ...d }; } };
-const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage disabled */ } };
-
 let state = load(KEY, CHAMBER_DEFAULTS);
 
 /* ---------- tabs ---------- */
@@ -25,6 +20,7 @@ function initTabs() {
       if (on && focus) t.focus();
     });
     try { localStorage.setItem(TAB_KEY, name); } catch { /* ignore */ }
+    document.dispatchEvent(new CustomEvent(TAB_EVENT, { detail: name }));
   };
   tabs.forEach((t, i) => {
     t.addEventListener("click", () => select(t.dataset.tab));
